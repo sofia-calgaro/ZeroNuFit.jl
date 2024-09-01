@@ -4,6 +4,7 @@ authors = ["sofiacal "]
 version = "0.1.0"
 
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 LegendDataManagement = "9feedd95-f0e0-423f-a8dc-de0970eae6b3"
 PropertyFunctions = "09e99361-2bb8-48a2-a80f-de58f0739eb4"
