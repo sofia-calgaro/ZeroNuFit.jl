@@ -1,8 +1,18 @@
-module try_me
+# src/ZeroNuFit.jl
+module ZeroNuFit
 
-greet() = print("Hello World!")
+using JSON
 
-end # module YourPackageName
+export run_analysis
 
-using .try_me
-try_me.greet()
+function run_analysis(config::Dict{String, Any})
+    println("You entered into sr/ZeroNuFit.jl - starting the analysis ...")
+    println("Running analysis with the following configuration:")
+    println(config)
+    
+    # ... here the analysis will be implemented ...
+    
+    println("...done!")
+end
+
+end 

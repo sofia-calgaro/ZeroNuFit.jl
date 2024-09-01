@@ -1,0 +1,5 @@
+{
+    "data_path": "path/to/your/data.csv",
+    "model_type": "linear_regression",
+    "iterations": 1000
+}
