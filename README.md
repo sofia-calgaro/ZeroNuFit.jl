@@ -21,3 +21,4 @@ Now you can run the script inside this enviroment with:
 ```
 julia main.jl --project=. -c config/config.json
 ```
+alternatively the code can be run within the Legend container, see https://github.com/legend-exp/legend-julia-tutorial for more details.

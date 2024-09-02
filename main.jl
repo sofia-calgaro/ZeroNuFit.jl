@@ -2,11 +2,13 @@
 ### -> gets a config.json file in input for running the Bayesian unbinned fit
 ###
 
+using Logging
 using Pkg
 Pkg.activate(".") # Activate the environment
 using ArgParse
 
 using JSON
+using FilePathsBase
 # load the script to run the analysis
 include("src/ZeroNuFit.jl")
 using .ZeroNuFit
@@ -41,13 +43,22 @@ function main()
     parsed_args = get_argparse()
     # read config path
     config_path = parsed_args["config"]
-    println("Reading configuration from: ", config_path)
+    @info "Reading configuration from: $config_path"
     config = read_config(config_path)
     
-    ### TO DO: if we save results somewhere (we can start from output/), it would be nice to give a name to saved files and/or stored them at specific paths - we can add this to the config file
-    
+    # load the output path and create the neccesary
+    output_path = config["output_path"]
+
+    for dir in ["$output_path/","$output_path/plots/","$output_path/mcmc_files/","$output_path/logs/"]
+        if !isdir(dir)
+            mkpath(dir)
+        end
+    end
+   
+
     # Call the analysis function from ZeroNuFit
-    ZeroNuFit.run_analysis(config)
+    ZeroNuFit.run_analysis(config,output_path=output_path)
+
 end
 
 # Run the main function if this file is executed directly
