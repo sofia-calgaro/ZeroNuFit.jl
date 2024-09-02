@@ -3,7 +3,7 @@ using PropertyFunctions
 using JSON
 using PropDicts
 
-function get_partitions(config::Dict{String, Any}, printflag=nothing)
+function get_partitions(config::Dict{String, Any}, printflag=false)
     # retrieve metadata path from the config; if nothing, load the online metadata
     metapath = config["meta_path"]
     if metapath != nothing
@@ -31,7 +31,7 @@ function get_partitions(config::Dict{String, Any}, printflag=nothing)
             continue
         end
 
-        if printflag != nothing
+        if printflag == true
             println("detector = $detector")
             println(">>>>>>>>>>> ")
         end
@@ -43,7 +43,7 @@ function get_partitions(config::Dict{String, Any}, printflag=nothing)
             new = partitions.default
             detdata_merge = merge(new,copy(detdata))
         end
-
+        
         # loop over partitions for this detector
         for (partition, pardata) in detdata_merge
             if partition == :default
@@ -57,7 +57,7 @@ function get_partitions(config::Dict{String, Any}, printflag=nothing)
                 pardata_merge = merge(new,copy(pardata))
             end
 
-            if printflag != nothing
+            if printflag == true
                 println("for partition $partition ")
                 printdb(pardata_merge)
                 println("\n")
