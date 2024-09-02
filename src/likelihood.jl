@@ -43,8 +43,7 @@ end
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
 ModelParameters = NamedTuple{(:S, :B, :bias, :res)}
 function build_likelihood_looping_partitions(partitions, events)
-    DensityInterface.logfuncdensity(
-        p::ModelParameters -> begin
+    return DensityInterface.logfuncdensity( function(p::ModelParameters)
             total_ll = 0.0
 
             for (idx_k, part_k) in enumerate(partitions)
@@ -54,5 +53,20 @@ function build_likelihood_looping_partitions(partitions, events)
             return total_ll
         end
     )
+end
+
+function build_prior(partitions;config)
+    res=[]
+    bias=[]
+    for part in partitions
+        append!(res,[Normal(part.fwhm/2.355,part.fwhm_sigma/2.355)])
+        append!(bias,[Normal(part.bias,part.bias_sigma)])
+    end
+    return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res= fill(0..10, length(partitions)),
+    bias= fill(-2..2,length(partitions)))
+    
+    #res=distprod(res),bias=distprod(bias))
+
+
 end
 
