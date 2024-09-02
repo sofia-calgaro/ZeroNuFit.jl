@@ -8,10 +8,11 @@ using JSON
 
 export run_analysis
 
+
 # function to run the unbinned fit
 function run_analysis(config::Dict{String, Any};output_path::String)
 
-    @info "You entered into sr/ZeroNuFit.jl"
+    @info "You entered into src/ZeroNuFit.jl"
     @info "Starting the analysis..."
     @info "- running analysis with the following configuration:"
     
@@ -19,7 +20,7 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     ### TO DO: retrieve a list of energies/timestamp/det_IDs (=data) from out of the code
 
     l200 = [1953.1427, 1955.2213, 1974.731, 1996.4917, 2016.76, 2040.262, 2095.7217]
-    @info"we define some legend data: $l200"
+    @info "we define some legend data: $l200"
     
     @info"Let's try retrieving some partitions (output is muted at the moment) ..."
     get_partitions(config)
