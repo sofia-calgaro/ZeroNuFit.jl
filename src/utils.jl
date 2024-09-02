@@ -12,6 +12,7 @@ using LegendDataManagement
 function get_partitions_new(part_path::String)
     """
     Get the partition info from a jason file and save  to a Table
+
     """
         part_data_json = JSON.parsefile(part_path,dicttype=DataStructures.OrderedDict)
         k = keys(part_data_json[1])
@@ -41,66 +42,32 @@ function get_partitions_new(part_path::String)
         return tab
 end
 
-function get_partitions(config::Dict{String, Any}, printflag=false)
-    # retrieve metadata path from the config; if nothing, load the online metadata
-    metapath = config["meta_path"]
-    if metapath != nothing
-        meta = LegendDataManagement.AnyProps(metapath)
-    else
-        meta = LegendDataManagement.AnyProps() ### TO DO: test if it works
-    end
 
-    partitions = meta.datasets.ovbb_partitions_pars
-    function printdb(db)
-        if db isa PropDict
-            for (key,value) in db
-                println(key)
-                printdb(value)
-            end
-        else
-            println("\t",db)
-            println()
-        end
-    end
+function get_events(event_path,partitions)
+    """
+        Get the event info from a jason file and save  to a Table
+    """
     
-    # loop over detectors
-    for (detector, detdata) in partitions
-        if detector == :default
-            continue
+        event_json = JSON.parsefile(event_path,dicttype=DataStructures.OrderedDict)
+        events=[]
+        for (idx,part) in enumerate(partitions)
+            append!(events,[[]])
         end
-
-        if printflag == true
-            println("detector = $detector")
-            println(">>>>>>>>>>> ")
+       
+        for event in event_json["events"]
+            found=false
+            for (idx,part) in enumerate(partitions)
+                if (part.detector==event["detector"] && event["timestamp"]<part.end_ts && event["timestamp"]>part.start_ts)
+                    append!(events[idx],event["energy"])
+                    found=true
+                end
+                    
+            end
+            if (found==false)
+                @error event "has no partition"
+                exit(-1)
+            end
         end
+        return events
         
-        # apply defaults
-        if partitions.default isa PropDicts.MissingProperty 
-            detdata_merge = copy(detdata)
-        else
-            new = partitions.default
-            detdata_merge = merge(new,copy(detdata))
-        end
-        
-        # loop over partitions for this detector
-        for (partition, pardata) in detdata_merge
-            if partition == :default
-                continue
-            end
-
-            if detdata_merge.default isa PropDicts.MissingProperty 
-                pardata_merge = copy(pardata)
-            else
-                new = detdata_merge.default
-                pardata_merge = merge(new,copy(pardata))
-            end
-
-            if printflag == true
-                println("for partition $partition ")
-                printdb(pardata_merge)
-                println("\n")
-            end
-
-        end
-    end
 end

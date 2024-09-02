@@ -3,6 +3,8 @@
     "partitions":["config/partitions_gerda.json"],
     "events":    ["config/events_gerda.json"],
     "meta_path": "/home/tdixon/LEGEND/legend-metadata/",
-    "output_path": "output/test_fit/"
+    "output_path": "output/test_fit/",
+    "upper_signal":1e-25,
+    "upper_bkg":1e-3
 }
 

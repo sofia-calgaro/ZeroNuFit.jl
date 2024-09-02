@@ -15,9 +15,8 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     @info "Starting the analysis..."
     @info "- running analysis with the following configuration:"
     
-    ### TO DO: retrieve a list of energies/timestamp/det_IDs (=data) from out of the code
-
-    l200 = [1953.1427, 1955.2213, 1974.731, 1996.4917, 2016.76, 2040.262, 2095.7217]
+    
+    
     @info "we define some legend data: $l200"
     
     @info"Let's try retrieving some partitions ..."
@@ -25,10 +24,14 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     for part_path  in config["partitions"]
         append!(partitions,get_partitions_new(part_path))
     end
-    println(partitions)
+    events = []
+    for (event_path,part) in zipped(config["events"],partitions)
+        append!(events,get_events(event_path,part))
+    end
     @info "...done!"
     
     @info "and now we run a fit:"
+    
     ### TO DO: some of these specifications must go in the config file
     # this is a test function
     
