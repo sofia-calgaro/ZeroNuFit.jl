@@ -13,7 +13,7 @@ deltaE = 240 # keV
 
 
 # the function is called in a loop of partitions (and experiments)
-function build_likelihood_per_partition(idx_k, part_k::Table, events_k, p)
+function build_likelihood_per_partition(idx_k, part_k, events_k, p)
 
     # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
     ll_value = 0
@@ -27,7 +27,7 @@ function build_likelihood_per_partition(idx_k, part_k::Table, events_k, p)
         
     ll_value += logpdf(Poisson(model_tot_k), length(events_k)) # + alpha term ???
     for i in events_k
-        for evt_energy in events_in_k
+        for evt_energy in events_k
 
             term1 = model_b_k / deltaE # background
             term2 = model_s_k * pdf(Normal(Qbb + p.bias[idx_k], p.res[idx_k]), evt_energy) # signal
@@ -43,7 +43,7 @@ end
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
 ModelParameters = NamedTuple{(:S, :B, :bias, :res)}
 function build_likelihood_looping_partitions(partitions, events)
-    return DensityInterface.logfuncdensity( function(p::ModelParameters)
+    return DensityInterface.logfuncdensity( function(p)
             total_ll = 0.0
 
             for (idx_k, part_k) in enumerate(partitions)
