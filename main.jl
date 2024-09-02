@@ -2,15 +2,42 @@
 ### -> gets a config.json file in input for running the Bayesian unbinned fit
 ###
 
+
 using Pkg
 Pkg.activate(".") # Activate the environment
 using ArgParse
-
+using Logging, LoggingExtras
 using JSON
+using FilePathsBase
 # load the script to run the analysis
 include("src/ZeroNuFit.jl")
 using .ZeroNuFit
 
+
+function set_logger(config::Dict,output_path::String)
+    if ("debug" in keys(config) && config["debug"]==true)
+        terminal_log=global_logger(ConsoleLogger(stderr, LogLevel(Debug)))
+    else
+        terminal_log=global_logger(ConsoleLogger(stderr, LogLevel(Info)))
+    end
+
+
+    logger = TeeLogger(
+        terminal_log,
+        # Accept any messages with level >= Info
+        MinLevelLogger(
+            FileLogger("$output_path/logs/logfile.log"),
+            Logging.Info
+        ),
+        # Accept any messages with level >= Debug
+        MinLevelLogger(
+            FileLogger("$output_path/logs/debug.log"),
+            Logging.Debug,
+        ),
+    )
+    global_logger(logger)
+
+end
 
 # read JSON configuration file
 function read_config(file_path::String)
@@ -39,15 +66,26 @@ function main()
     
     # read parsed arguments
     parsed_args = get_argparse()
+
     # read config path
     config_path = parsed_args["config"]
-    println("Reading configuration from: ", config_path)
+    @info "Reading configuration from: $config_path"
     config = read_config(config_path)
     
-    ### TO DO: if we save results somewhere (we can start from output/), it would be nice to give a name to saved files and/or stored them at specific paths - we can add this to the config file
-    
+    # load the output path and create the neccesary
+    output_path = config["output_path"]
+
+    for dir in ["$output_path/","$output_path/plots/","$output_path/mcmc_files/","$output_path/logs/"]
+        if !isdir(dir)
+            mkpath(dir)
+        end
+    end
+   
+    set_logger(config,output_path)
+
     # Call the analysis function from ZeroNuFit
-    ZeroNuFit.run_analysis(config)
+    ZeroNuFit.run_analysis(config,output_path=output_path)
+
 end
 
 # Run the main function if this file is executed directly

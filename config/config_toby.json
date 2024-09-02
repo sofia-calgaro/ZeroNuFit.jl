@@ -1,0 +1,8 @@
+{
+    "data_path": "path/to/your/data.csv",
+    "debug":false,
+    "meta_path": "/home/tdixon/LEGEND/legend-metadata/",
+    "output_path": "output/test_fit/",
+    "model_type": "linear_regression",
+    "iterations": 1000
+}
