@@ -56,6 +56,7 @@ function get_events(event_path,partitions)
        
         for event in event_json["events"]
             found=false
+            
             for (idx,part) in enumerate(partitions)
                 if (part.detector==event["detector"] && event["timestamp"]<part.end_ts && event["timestamp"]>part.start_ts)
                     append!(events[idx],event["energy"])
