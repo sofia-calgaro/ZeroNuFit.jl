@@ -1,7 +1,8 @@
 {
     "data_path": "path/to/your/data.csv",
+    "debug":false,
     "meta_path": "/global/cfs/cdirs/m2676/data/lngs/l200/public/prodenv/prod-blind/ref-v2.1.2/inputs",
-    "output": "output/",
+    "output_path": "output/test_fit/",
     "model_type": "linear_regression",
     "iterations": 1000
 }
