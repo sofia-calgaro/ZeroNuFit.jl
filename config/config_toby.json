@@ -5,6 +5,7 @@
     "meta_path": "/home/tdixon/LEGEND/legend-metadata/",
     "output_path": "output/test_fit/",
     "upper_signal":1e-25,
-    "upper_bkg":1e-3
+    "upper_bkg":1e-3,
+    "stat_only":true
 }
 
