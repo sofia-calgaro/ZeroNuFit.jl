@@ -4,7 +4,8 @@
 
 
 using Pkg
-Pkg.activate(".") # Activate the environment
+Pkg.activate(".") # activate the environment
+Pkg.instantiate() # instantiate the environment
 using ArgParse
 using Logging, LoggingExtras
 using JSON
