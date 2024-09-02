@@ -15,14 +15,21 @@ function run_analysis(config::Dict{String, Any})
     println("- running analysis with the following configuration:")
     println(config)
     
+    ### TO DO: retrieve a list of energies/timestamp/det_IDs (=data) from out of the code
     l200 = [1953.1427, 1955.2213, 1974.731, 1996.4917, 2016.76, 2040.262, 2095.7217]
+    println("we define some legend data:", l200)
     
-    #samples_l200_uniform = run_fit(l200,fit_function_uniform,distprod(b=0..20.))
-    #bat_report(samples_l200_uniform)
+    println("Let's try retrieving some partitions (output is muted at the moment) ...")
     get_partitions(config)
-    
     println("...done!")
-    return # fit_results
+    
+    println("and now we run a fit:")
+    ### TO DO: some of these specifications must go in the config file
+    samples_l200_uniform = run_fit(l200,fit_function_uniform,distprod(b=0..20.))
+    bat_report(samples_l200_uniform)
+    println("...done!")
+    
+    return 
 end
 
 end 
