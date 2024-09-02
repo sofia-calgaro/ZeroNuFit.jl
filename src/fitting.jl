@@ -146,8 +146,7 @@ end
 ##############################################
 function run_fit_signal(data,prior,is_uniform=true)
     likelihood =build_likelihood_signal_background(data,norm_uniform,norm_gauss,3,is_uniform)
-    print(likelihood)
-    print(prior)
+   
     posterior = PosteriorMeasure(likelihood, prior)
 
     return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4)).result

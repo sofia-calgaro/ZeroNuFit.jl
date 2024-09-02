@@ -1,2 +1,11 @@
 .ipynb_checkpoints/
 src/.ipynb_checkpoints/
+.DS_Store
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+.vscode
+outputs/*
+output/*
+*.pdf
+*.h5
