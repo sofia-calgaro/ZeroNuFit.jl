@@ -1,8 +1,11 @@
 ### main.jl
 ### -> gets a config.json file in input for running the Bayesian unbinned fit
+###
+
+using Pkg
+Pkg.activate(".") # Activate the environment
 
 using JSON
-
 # load the script to run the analysis
 include("src/ZeroNuFit.jl")
 using .ZeroNuFit
@@ -16,16 +19,12 @@ function read_config(file_path::String)
 end
 
 function main()
-
-    # Check if the config argument was provided
-    #if !haskey(args, :config)
-    #    println("Error: Configuration file not provided. Use -c option.")
-    #    return
-    #end
-
-    config_path = "config/config.json" # how to argparse from the outside?
+    
+    ### TO DO: parse the config path to main()
+    ### TO DO: if we save results somewhere (we can start from output/), it would be nice to give a name to saved files and/or stored them at specific paths - we can add this to the config file
+    
+    config_path = "config/config.json" 
     println("Reading configuration from: ", config_path)
-
     config = read_config(config_path)
 
     # Call the analysis function from ZeroNuFit
