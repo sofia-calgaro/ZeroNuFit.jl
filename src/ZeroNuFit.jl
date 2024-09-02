@@ -21,7 +21,11 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     @info "we define some legend data: $l200"
     
     @info"Let's try retrieving some partitions ..."
-    # partitions = get_partitions(config, false)
+    partitions = []
+    for part_path  in config["partitions"]
+        append!(partitions,get_partitions_new(part_path))
+    end
+    println(partitions)
     @info "...done!"
     
     @info "and now we run a fit:"
