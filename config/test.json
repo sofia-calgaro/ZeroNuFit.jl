@@ -1,0 +1,28 @@
+{
+    "L200-B00000B-p001":{
+                "experiment":"L200",
+                "detector":"B00000B",
+                "timestamp_range":[0,1],
+                "partion":"p001",
+                "resolution":0,
+                "resolution_err":0.1,
+
+
+        },
+        {   
+            "experiment":"L200",
+            "detector":"B00000B",
+            "timestamp_range":[0,1],
+            "resolution":0
+
+        },
+        {
+            "experiment":"L200",
+            "detector":"B00000B",
+            "timestamp_range":[0,1],
+            "resolution":0
+
+        },
+
+    ]
+}
