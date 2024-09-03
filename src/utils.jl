@@ -10,6 +10,7 @@ using TypedTables
 using LegendDataManagement
 using FileIO
 import JLD2
+import HDF5
 
 function get_partitions_new(part_path::String)
     """
@@ -78,6 +79,7 @@ end
 
 function save_results(samples,output)
     FileIO.save(joinpath(output,"mcmc_files/results.jld2"), Dict("samples" => samples))
+    bat_write(joinpath(output,"mcmc_files/results.h5"), samples)
 end
 
 
