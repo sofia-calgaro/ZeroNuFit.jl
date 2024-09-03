@@ -29,6 +29,7 @@ function get_partitions_new(part_path::String)
                 end
     
         end
+
         
         #TODO: find a way to make this not hardcoded
         tab = Table(detector=Array(arrays["detector"]),
@@ -45,6 +46,25 @@ function get_partitions_new(part_path::String)
         return tab
 end
 
+function get_partition_event_index(events,partitions)
+"""
+gets an object descirbing if a partiton has an event and giving them indexs
+"""
+
+output = Vector{Int}(undef,length(partitions))
+counter=1
+for (idx,part) in enumerate(partitions)
+    if (events[idx] != Any[])
+        output[idx]=counter
+        counter+=1
+    else
+        output[idx]=0
+    end
+end
+return output
+
+
+end
 
 function get_events(event_path,partitions)
     """
