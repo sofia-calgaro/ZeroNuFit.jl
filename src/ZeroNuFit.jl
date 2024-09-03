@@ -24,9 +24,12 @@ function run_analysis(config::Dict{String, Any};output_path::String)
         append!(events,[get_events(event_path,part)])
     end
     @debug "... extracted events:", events
+
+    @info "get which partitions have events"
+    part_event_index = get_partition_event_index(events[1],partitions[1])
     
     @info "... and now we run a fit"
-    samples_uniform = run_fit_over_partitions(partitions[1],events[1],config=config,stat_only=config["stat_only"]) 
+    samples_uniform = run_fit_over_partitions(partitions[1],events[1],part_event_index,config=config,stat_only=config["stat_only"]) 
     @info bat_report(samples_uniform)
     
     @info "and we plot results"
