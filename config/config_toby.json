@@ -1,7 +1,7 @@
 {
     "debug":false,
-    "partitions":["config/partitions_gerda.json"],
-    "events":    ["config/events_gerda.json"],
+    "partitions":["config/partitions_l200.json"],
+    "events":    ["config/events_l200.json"],
     "meta_path": "/home/tdixon/LEGEND/legend-metadata/",
     "output_path": "output/test_fit/",
     "overwrite":true,
