@@ -28,16 +28,23 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     @info "get which partitions have events"
     part_event_index = get_partition_event_index(events[1],partitions[1])
     
-    @info "... and now we run a fit"
-    samples_uniform = run_fit_over_partitions(partitions[1],events[1],part_event_index,config=config,stat_only=config["stat_only"]) 
-    @info bat_report(samples_uniform)
+    # check if you want to overwrite the fit; if no results are present, then fit data
+    if config["overwrite"] == true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
+        @info "... now we run a fit"
+        if config["overwrite"] == true
+            @info "OVERWRITING THE PREVIOUS FIT!"
+        end
+        samples = run_fit_over_partitions(partitions[1],events[1],part_event_index,config=config,stat_only=config["stat_only"]) 
+    # load the already present fit
+    else
+        @info "... we load already existing fit results"
+        samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
+    end
     
-    @info "and we plot results"
-    make_plots(samples_uniform, (:B, :S), config["output_path"])
+    @info bat_report(samples)
     
-    @info "and we save fit results"
-    save_results(samples_uniform,config["output_path"])
-    @info "...done!"
+    # save results
+    save_outputs(samples, config)
     
     return 
 end
