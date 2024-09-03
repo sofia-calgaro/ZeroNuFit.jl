@@ -52,7 +52,7 @@ function run_fit_over_partitions(partitions,events;func,config,stat_only)
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
 
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(),init=MCMCChainPoolInit(nsteps_init=100000), nsteps = 10^5, nchains = 4),).result
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4),).result
 end
 
 
