@@ -27,7 +27,7 @@ alternatively the code can be run within the Legend container, see https://githu
 ## Config file
 Before running the code, set the input config.json file with following entries:
 
-```json
+```bash
 {
     "debug":false, // true if you want to display debug output on terminal
     "partitions":["config/partitions_gerda.json"], // include partitions inputs -> one entry per experiment
