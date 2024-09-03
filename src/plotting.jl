@@ -31,6 +31,7 @@ function plot_data(hist::Histogram,name,func=nothing,samples=nothing,fitfunction
     function binfitfunction(x,params)
         fitfunction(x,params)*diff(bin_edges)[1]
     end
+    
     if (samples!=nothing)
         plot!(p,1930:0.1:2190, binfitfunction, samples,alpha=0.4,median=false,globalmode=false,fillalpha=0.3)
     end
@@ -68,7 +69,8 @@ end
 ##############################################
 ##############################################
 ##############################################
-function make_plots(samples,pars,hist,fit_function,output)
+function make_plots(samples,pars,output)    
+    
     name = split(output, "output/")[end]
         
     # marginalized posterior for each parameter
@@ -93,6 +95,16 @@ function make_plots(samples,pars,hist,fit_function,output)
         
     # fit over data (TO DO)
     """
+    # create histo with energies 
+    energies = []
+    for (idx_k, part_k) in enumerate(partitions[1])
+        if events[1][idx_k] != Any[]
+            for energy in events[1][idx_k]
+                append!(energies, events[1][idx_k])
+            end
+        end
+    end
+    hist_data = append!(Histogram(1930:2:2190), energies)
     p_fit = plot_data(hist,name,nothing,samples,fit_function)
     savefig(joinpath(output, "plots/fit_over_data.pdf"))
     """
