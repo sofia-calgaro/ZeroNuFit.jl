@@ -1,8 +1,11 @@
 {
-    "data_path": "path/to/your/data.csv",
     "debug":false,
+    "partitions":["config/partitions_gerda.json"],
+    "events":    ["config/events_gerda.json"],
     "meta_path": "/home/tdixon/LEGEND/legend-metadata/",
     "output_path": "output/test_fit/",
-    "model_type": "linear_regression",
-    "iterations": 1000
+    "upper_signal":1e-25,
+    "upper_bkg":1e-3,
+    "stat_only":true
 }
+

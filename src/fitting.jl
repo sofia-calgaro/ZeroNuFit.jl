@@ -44,11 +44,15 @@ end
 ##############################################
 ##############################################
 ##############################################
-function run_fit_over_partitions(partitions,events,func,prior)
-    likelihood = build_likelihood_looping_partitions(partitions, events)
-    posterior = PosteriorMeasure(likelihood, prior) # signal, bkg, resolution, bias (alpha?)
+function run_fit_over_partitions(partitions,events;func,config,stat_only)
 
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4)).result
+    prior=build_prior(partitions,config=config,stat_only=stat_only)
+    @info "build prior"
+    likelihood = build_likelihood_looping_partitions(partitions, events,stat_only=stat_only)
+    posterior = PosteriorMeasure(likelihood, prior) 
+    @info "got posterior"
+
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4),).result
 end
 
 
