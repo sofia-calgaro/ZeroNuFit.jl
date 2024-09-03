@@ -4,7 +4,7 @@ using TypedTables
 using Plots
 using Cuba
 
-# define some constants
+# define some constants -TODO add to config
 Qbb = 2039.06 # keV
 N_A = 6.022E23
 m_76 = 75.6E-3 # kg/mol
@@ -98,15 +98,17 @@ Parameters
     - config: the Dict of the fit config
     - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
 """
-    res=[]
-    bias=[]
-    for part in partitions
-        append!(res,[Normal(part.fwhm/2.355,part.fwhm_sigma/2.355)])
-        append!(bias,[Normal(part.bias,part.bias_sigma)])
+    res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,length(partitions))
+    bias=Vector{Normal{Float64}}(undef,length(partitions))
+
+    for (idx,part) in enumerate(partitions)
+        
+        res[idx]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+        bias[idx] =Normal(part.bias,part.bias_sigma)
     end
     if (stat_only==false)
-        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res= fill(0..10, length(partitions)),
-    bias= fill(-2..2,length(partitions)))
+        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res=res,bias=bias)
+    
     else 
         distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
     end
