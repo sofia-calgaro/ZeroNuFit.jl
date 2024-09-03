@@ -49,7 +49,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function run_fit_over_partitions(partitions,events;func,config,stat_only)
+function run_fit_over_partitions(partitions,events;config,stat_only)
 """
 FUnction to run the fit looping over partitions
 """

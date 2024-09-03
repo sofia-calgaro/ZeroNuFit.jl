@@ -26,7 +26,7 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     @debug "... extracted events:", events
     
     @info "... and now we run a fit"
-    samples_uniform = run_fit_over_partitions(partitions[1],events[1],func=fit_function_uniform,config=config,stat_only=config["stat_only"]) 
+    samples_uniform = run_fit_over_partitions(partitions[1],events[1],config=config,stat_only=config["stat_only"]) 
     println(samples_uniform)
     println(bat_report(samples_uniform))
     
