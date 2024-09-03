@@ -19,7 +19,7 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
     ll_value = 0
     
     model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
-    model_b_k = deltaE * part_k.exposure * p.B*part_k.eff_tot
+    model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
 
     # loop over events in the analysis window (we already checked for presence of events for a given partition k)
