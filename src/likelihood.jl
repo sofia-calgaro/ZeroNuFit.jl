@@ -17,15 +17,15 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
 
     # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
     ll_value = 0
-
+    
     model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
     model_b_k = deltaE * part_k.exposure * p.B*part_k.eff_tot
     model_tot_k = model_b_k + model_s_k
 
     # loop over events in the analysis window (we already checked for presence of events for a given partition k)
-    
-        
-    ll_value += logpdf(Poisson(model_tot_k), length(events_k)) # + alpha term ???
+
+    ll_value += logpdf(Poisson(model_tot_k+eps(model_tot_k)), length(events_k)) # + alpha term ???
+    ll_pois=ll_value
     for i in events_k
         for evt_energy in events_k
 
@@ -36,11 +36,21 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
             else
                 term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal
             end
-            ll_value += log( (term1 + term2) / model_tot_k ) 
+            ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
 
     end
-
+    if (isnan(ll_value) || isinf(ll_value))
+        println("S = ",p.S)
+        println("eff ",part_k.eff_tot)
+        println("exp ",part_k.exposure)
+        println("LL ",ll_value)
+        println("LL pois ",ll_pois)
+        println("model tot ",model_tot_k)
+        println("events_k ",events_k)
+        println("\n")
+        
+    end
     return ll_value
 end
 
