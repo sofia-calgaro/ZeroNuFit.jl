@@ -11,8 +11,20 @@ m_76 = 75.6E-3 # kg/mol
 deltaE = 240 # keV
 
 
+function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
 
-# the function is called in a loop of partitions (and experiments)
+    # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
+    ll_value = 0
+    
+    model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
+    model_b_k = deltaE * part_k.exposure * p.B
+    model_tot_k = model_b_k + model_s_k
+
+    ll_value += logpdf(Poisson(model_tot_k+eps(model_tot_k)), 0) # + alpha term ???
+    
+    return ll_value
+end
+
 function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=false)
 
     # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -22,10 +34,8 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
 
-    # loop over events in the analysis window (we already checked for presence of events for a given partition k)
-
     ll_value += logpdf(Poisson(model_tot_k+eps(model_tot_k)), length(events_k)) # + alpha term ???
-    ll_pois=ll_value
+    
     for i in events_k
         for evt_energy in events_k
 
@@ -51,7 +61,13 @@ function build_likelihood_looping_partitions(partitions, events;stat_only=false)
             total_ll = 0.0
 
             for (idx_k, part_k) in enumerate(partitions)
-                total_ll += build_likelihood_per_partition(idx_k, part_k, events[idx_k], p)
+                
+                if events[idx_k] != Any[]
+                    total_ll += build_likelihood_per_partition(idx_k, part_k, events[idx_k], p)
+                else
+                    # no events are there for a given partition
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p)
+                end
             end
             return total_ll
         end

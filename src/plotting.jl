@@ -4,22 +4,6 @@ using BAT, DensityInterface, IntervalSets
 using TypedTables
 using Cuba
 
-
-default(
-    titlefont = "Roboto",           # Font for plot titles
-    guidefont = "Roboto",               # Font for axis labels
-    tickfont = "Arial",              # Font for axis ticks
-    legendfont = "Arial",           # Font for the legend
-    framestyle=:box,               # Grid line transparency
-    background_color = :white   ,       # Background color of the plot,
-    titlefontsize=16,     # Global title font size
-    guidefontsize=16,     # Global axis label font size
-    tickfontsize=10,      # Global tick label font size
-    legendfontsize=10     # Global legend font size
-)
-
-
-
 ##############################################
 ##############################################
 ##############################################
@@ -56,7 +40,7 @@ function plot_data(hist::Histogram,name,func=nothing,samples=nothing,fitfunction
     plot!(
        p, hist,
         st = :steps, label = "Data",
-        title = "$name data",
+        title ="$name data",
         xlabel="Energy [keV]",
         ylabel="counts/2 keV",
         ylim=(0,ymax),
@@ -84,23 +68,34 @@ end
 ##############################################
 ##############################################
 ##############################################
-function make_plots(samples,pars,hist,name,fit_function) # ,pdfname=nothing
-    samples_mode = mode(samples)
+function make_plots(samples,pars,hist,fit_function,output)
+    name = split(output, "output/")[end]
         
+    # marginalized posterior for each parameter
     for par in pars
     
         p=plot(
         samples, par,
-        mean = false, std = false, globalmode = false, marginalmode = true,
+        mean = false, std = false, globalmode = true, marginalmode = true,
         nbins = 200
         )
-        #display(p)
-    end
+        savefig(joinpath(output, "plots/$(par)_marg_posterior.pdf"))
         
-    p_fit = plot_data(hist,name,nothing,samples,fit_function,savefig)
-    #display(p_fit)
+    end
     
-    ### TO DO : implement a way to save plots (p, p_fit) in a single PDF!
+    # all parameters together
+    plot(
+        samples,
+        mean = false, std = false, globalmode = false, marginalmode = true,
+        nbins = 200
+    )
+    savefig(joinpath(output, "plots/all_marg_posterior_2D.pdf"))
+        
+    # fit over data (TO DO)
+    """
+    p_fit = plot_data(hist,name,nothing,samples,fit_function)
+    savefig(joinpath(output, "plots/fit_over_data.pdf"))
+    """
         
 end
 

@@ -8,6 +8,8 @@ using PropDicts
 using Tables
 using TypedTables
 using LegendDataManagement
+using FileIO
+import JLD2
 
 function get_partitions_new(part_path::String)
     """
@@ -72,3 +74,10 @@ function get_events(event_path,partitions)
         return events
         
 end
+
+
+function save_results(samples,output)
+    FileIO.save(joinpath(output,"mcmc_files/results.jld2"), Dict("samples" => samples))
+end
+
+
