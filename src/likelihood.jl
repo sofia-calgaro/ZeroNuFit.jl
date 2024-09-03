@@ -13,14 +13,13 @@ deltaE = 240 # keV
 
 function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
 
-    # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
     ll_value = 0
     
     model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
 
-    ll_value += logpdf(Poisson(model_tot_k+eps(model_tot_k)), 0) # + alpha term ???
+    ll_value += -(model_tot_k+eps(model_tot_k)) # + alpha term ???
     
     return ll_value
 end
@@ -42,9 +41,9 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
             term1 = model_b_k / deltaE # background
 
             if (stat_only==true)
-                term2 = model_s_k * pdf(Normal(Qbb + p.bias[idx_k], p.res[idx_k]), evt_energy) # signal
+                term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
             else
-                term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal
+                term2 = model_s_k * pdf(Normal(Qbb + p.bias[idx_k], p.res[idx_k]), evt_energy) # signal (free nuisance)
             end
             ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
@@ -63,7 +62,7 @@ function build_likelihood_looping_partitions(partitions, events;stat_only=false)
             for (idx_k, part_k) in enumerate(partitions)
                 
                 if events[idx_k] != Any[]
-                    total_ll += build_likelihood_per_partition(idx_k, part_k, events[idx_k], p)
+                    total_ll += build_likelihood_per_partition(idx_k, part_k, events[idx_k], p, stat_only=stat_only)
                 else
                     # no events are there for a given partition
                     total_ll += build_likelihood_zero_obs_evts(part_k, p)
