@@ -12,6 +12,10 @@ deltaE = 240 # keV
 
 
 function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
+"""
+Function to calculate the partial likelihood for a partition with 0 events
+    
+"""
 
     ll_value = 0
     
@@ -25,7 +29,9 @@ function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
 end
 
 function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=false)
-
+"""
+Function which computes the partial likelihood for a single data partiton
+"""
     # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
     ll_value = 0
     
@@ -54,8 +60,19 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
 end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
-ModelParameters = NamedTuple{(:S, :B, :bias, :res)}
 function build_likelihood_looping_partitions(partitions, events;stat_only=false)
+"""
+Function which creates the likelihood function for the fit (looping over partitions)
+Parameters:
+-----------
+    -partitions: Table - partitions input file
+    -events: Array      - list of events in each partitions (with their energy)
+    -stat_only:bool     -whether the fit includes only parameters of interest
+Returns:
+--------
+    DensityInterface.logfuncdensity - the likelihood function
+"""
+
     return DensityInterface.logfuncdensity( function(p)
             total_ll = 0.0
 
@@ -74,6 +91,13 @@ function build_likelihood_looping_partitions(partitions, events;stat_only=false)
 end
 
 function build_prior(partitions;config,stat_only=false)
+"""
+Builds the priors for use in the fit
+Parameters
+    - partitions:Table of the partition info
+    - config: the Dict of the fit config
+    - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
+"""
     res=[]
     bias=[]
     for part in partitions
@@ -87,7 +111,6 @@ function build_prior(partitions;config,stat_only=false)
         distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
     end
     
-    #res=distprod(res),bias=distprod(bias))
 
 
 end
