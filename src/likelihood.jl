@@ -40,17 +40,7 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
         end
 
     end
-    if (isnan(ll_value) || isinf(ll_value))
-        println("S = ",p.S)
-        println("eff ",part_k.eff_tot)
-        println("exp ",part_k.exposure)
-        println("LL ",ll_value)
-        println("LL pois ",ll_pois)
-        println("model tot ",model_tot_k)
-        println("events_k ",events_k)
-        println("\n")
-        
-    end
+    
     return ll_value
 end
 
