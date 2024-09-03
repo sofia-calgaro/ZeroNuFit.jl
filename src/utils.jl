@@ -1,6 +1,7 @@
 using LegendDataManagement
 using PropertyFunctions
 using JSON
+using Logging
 using Random, LinearAlgebra, Statistics, Distributions, StatsBase
 using PropDicts
 using FilePathsBase
@@ -119,7 +120,14 @@ Function which saves results from the fit and copies the input config (for any f
     
     global_modes = BAT.mode(samples) # quick estimate
     @info "Global modes: ", global_modes
-    marginalized_modes = BAT.bat_marginalmode(samples).result
+    ltmp = NullLogger()
+
+    marginalized_modes=0
+    
+    with_logger(ltmp) do
+        marginalized_modes = BAT.bat_marginalmode(samples).result
+       end
+
     @info "Marginalized modes: ", marginalized_modes
     mean = BAT.mean(samples)
     @info "Mean: ", mean
@@ -159,7 +167,7 @@ Function which saves results from the fit and copies the input config (for any f
         "config" => config
     )
 
-    json_string = JSON.json(data)
+    json_string = JSON.json(data,4)
     
     open(joinpath(output,"mcmc_files/fit_results.json"), "w") do file
         write(file, json_string)
