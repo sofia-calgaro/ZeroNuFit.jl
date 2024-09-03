@@ -4,7 +4,7 @@ using TypedTables
 using Plots
 using Cuba
 
-# define some constants
+# define some constants -TODO add to config
 Qbb = 2039.06 # keV
 N_A = 6.022E23
 m_76 = 75.6E-3 # kg/mol
@@ -12,6 +12,10 @@ deltaE = 240 # keV
 
 
 function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
+"""
+Function to calculate the partial likelihood for a partition with 0 events
+    
+"""
 
     ll_value = 0
     
@@ -24,8 +28,10 @@ function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
     return ll_value
 end
 
-function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=false)
-
+function build_likelihood_per_partition(idx_k, idx_part_with_events,part_k, events_k, p;stat_only=false)
+"""
+Function which computes the partial likelihood for a single data partiton
+"""
     # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
     ll_value = 0
     
@@ -43,7 +49,7 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
             if (stat_only==true)
                 term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
             else
-                term2 = model_s_k * pdf(Normal(Qbb + p.bias[idx_k], p.res[idx_k]), evt_energy) # signal (free nuisance)
+                term2 = model_s_k * pdf(Normal(Qbb + p.bias[idx_part_with_events], p.res[idx_part_with_events]), evt_energy) # signal (free nuisance)
             end
             ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
@@ -54,15 +60,27 @@ function build_likelihood_per_partition(idx_k, part_k, events_k, p;stat_only=fal
 end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
-ModelParameters = NamedTuple{(:S, :B, :bias, :res)}
-function build_likelihood_looping_partitions(partitions, events;stat_only=false)
+function build_likelihood_looping_partitions(partitions, events,part_event_index;stat_only=false)
+"""
+Function which creates the likelihood function for the fit (looping over partitions)
+Parameters:
+-----------
+    -partitions: Table - partitions input file
+    -events: Array      - list of events in each partitions (with their energy)
+    -stat_only:bool     -whether the fit includes only parameters of interest
+Returns:
+--------
+    DensityInterface.logfuncdensity - the likelihood function
+"""
+
     return DensityInterface.logfuncdensity( function(p)
             total_ll = 0.0
-
+            
             for (idx_k, part_k) in enumerate(partitions)
                 
-                if events[idx_k] != Any[]
-                    total_ll += build_likelihood_per_partition(idx_k, part_k, events[idx_k], p, stat_only=stat_only)
+                if part_event_index[idx_k]!=0
+                    idx_k_with_events=part_event_index[idx_k]
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, stat_only=stat_only)
                 else
                     # no events are there for a given partition
                     total_ll += build_likelihood_zero_obs_evts(part_k, p)
@@ -73,21 +91,33 @@ function build_likelihood_looping_partitions(partitions, events;stat_only=false)
     )
 end
 
-function build_prior(partitions;config,stat_only=false)
-    res=[]
-    bias=[]
-    for part in partitions
-        append!(res,[Normal(part.fwhm/2.355,part.fwhm_sigma/2.355)])
-        append!(bias,[Normal(part.bias,part.bias_sigma)])
+function build_prior(partitions,part_event_index;config,stat_only=false)
+"""
+Builds the priors for use in the fit
+Parameters
+    - partitions:Table of the partition info
+    - config: the Dict of the fit config
+    - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
+"""
+
+    res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+    bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
+
+    for (idx,part) in enumerate(partitions)
+        
+        if (part_event_index[idx]!=0)
+            i_new = part_event_index[idx]
+            res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+            bias[i_new] =Normal(part.bias,part.bias_sigma)
+        end
     end
     if (stat_only==false)
-        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res= fill(0..10, length(partitions)),
-    bias= fill(-2..2,length(partitions)))
+        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res=res,bias=bias)
+    
     else 
         distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
     end
     
-    #res=distprod(res),bias=distprod(bias))
 
 
 end

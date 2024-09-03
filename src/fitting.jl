@@ -15,7 +15,13 @@ range_h = [2099, 2114, 2190]
 ##############################################
 ##############################################
 function norm_uniform(slope::Real,x::Real)
-   
+"""
+Normalised linear function defined by (1+slope*(x-center)/260)/norm.
+Parameters
+----------
+    - slope::Real, the slope of the background
+    - x::Real,     the x value to evaluate at
+"""
     norm = sum(range_h .- range_l) * (1 - slope * center / 260) + slope * sum(range_h .^ 2 .- range_l .^ 2) / (2 * 260)
     (1+slope*(x-center)/260)/norm
 end
@@ -25,30 +31,32 @@ end
 ##############################################
 ##############################################
 function norm_gauss(sigma::Real,mu::Real,x::Real)
+"""
+Normalised gaussian function
+Parameters
+----------
+    - sigma::Real (the std of the Gaussian)
+    - mu::Real    (the mean)
+    - x::Real     (the x value to evaluate at)
+"""
     pdf(Normal(mu,sigma), x)
 end
 
 
-##############################################
-##############################################
-##############################################
-function fit_function_linear(p::NamedTuple{(:b, :s)}, x::Real)
-    p.b*norm_uniform(p.s,x)
-end
-function fit_function_uniform(p::NamedTuple{(:b,)},x::Real)
-    p.b*norm_uniform(0,x)
-end
 
 
 
 ##############################################
 ##############################################
 ##############################################
-function run_fit_over_partitions(partitions,events;func,config,stat_only)
-
-    prior=build_prior(partitions,config=config,stat_only=stat_only)
+function run_fit_over_partitions(partitions,events,part_event_index;config,stat_only)
+"""
+FUnction to run the fit looping over partitions
+"""
+    println(part_event_index)
+    prior=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "build prior"
-    likelihood = build_likelihood_looping_partitions(partitions, events, stat_only=stat_only)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only)
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
 
@@ -56,16 +64,6 @@ function run_fit_over_partitions(partitions,events;func,config,stat_only)
 end
 
 
-
-##############################################
-##############################################
-##############################################
-function run_fit(data,func,prior)
-    likelihood = build_simple_likelihood(data,func)
-    posterior = PosteriorMeasure(likelihood, prior)
-
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4)).result
-end
 
 
 
@@ -81,16 +79,6 @@ end
 
 
 
-##############################################
-##############################################
-##############################################
-function run_fit_signal(data,prior,is_uniform=true)
-    likelihood =build_simple_likelihood_signal_background(data,norm_uniform,norm_gauss,3,is_uniform)
-   
-    posterior = PosteriorMeasure(likelihood, prior)
-
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4)).result
-end
 
 
 
