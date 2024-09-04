@@ -42,10 +42,16 @@ Before running the code, set the input config.json file with following entries:
 ```
 
 ## Partition and events files
-The takes inputs in JSON format, two files are needed a "partitions file" giving information on the independent spectra to be used in the fit/likelihood, this is set by the "partitions" key in the config file. This provides all the information neccesary to define the fit model. The file consists of a file of independent spectra to include in the fit (for example channels or partitions). A partition is defined uniquely by a range of time-stamps and a detector name.
+The takes inputs in JSON format, two files are needed a "partitions file" giving information on the independent spectra to be used in the fit/likelihood, this is set by the "partitions" key in the config file. This provides all the information neccesary to define the fit model.
+
+The file consists of a file of independent spectra to include in the fit (for example channels or partitions). A partition is defined uniquely by a range of time-stamps, a detector name and an experiment name. 
+
+> **&#9432;** In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. This allows to make fits where all detectors are fit together.
+
+
 For each a dictonary is provided similar to the one below:
 ```
- {
+ {      "experiment": "LEGEND",
         "detector": "DET_0",
         "start_ts": 1704950367,
         "end_ts": 1708271505,
@@ -59,12 +65,12 @@ For each a dictonary is provided similar to the one below:
     },
 ```
 
-in future we will also add the possibility to customize further the fit. Currently it implements a fit to the energy spectrum with a uniform background which has the same rate for every partition.
+in future we will also add the possibility to customize further the fit. Currently it implements a fit to the energy spectrum with a uniform background which has the same rate for every partition. 
 
 In addition, it is neccesary to provide an 'event' file describing the events observed in the data, the path to this file is specified by the 'events' key in the config. Again this is a JSON file consisting of a list of observed events of the form.
  
 ```
-    {
+    {       "experiment":"LEGEND",
             "energy": 2069.420,
             "timestamp": 1755109448,
             "detector": "DET_0"
