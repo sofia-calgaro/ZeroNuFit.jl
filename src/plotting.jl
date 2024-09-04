@@ -3,19 +3,16 @@ using Plots
 using BAT, DensityInterface, IntervalSets
 using TypedTables
 using Cuba
+using Base.Filesystem
 using PDFmerger: append_pdf!
 
 default(
-    titlefont = "Roboto",           # Font for plot titles
-    guidefont = "Roboto",               # Font for axis labels
-    tickfont = "Arial",              # Font for axis ticks
-    legendfont = "Arial",           # Font for the legend
     framestyle=:box,               # Grid line transparency
     background_color = :white   ,       # Background color of the plot,
-    titlefontsize=16,     # Global title font size
-    guidefontsize=16,     # Global axis label font size
-    tickfontsize=10,      # Global tick label font size
-    legendfontsize=10     # Global legend font size
+    titlefontsize=12,     # Global title font size
+    guidefontsize=12,     # Global axis label font size
+    tickfontsize=12,      # Global tick label font size
+    legendfontsize=12     # Global legend font size
 )
 
 ##############################################
@@ -93,10 +90,8 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
     
     # remove old file
     if isfile(joinpath(output, "plots/marg_posterior.pdf"))
-        rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
+        Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
     end
-    p=plot()
-    savefig(joinpath(output, "plots/marg_posterior.pdf"))
     # marginalized posterior for each parameter
     ct = 1
     for par in pars

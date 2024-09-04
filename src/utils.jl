@@ -166,7 +166,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, samples, config)
+function save_outputs(partitions, samples, config;priors=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -177,7 +177,7 @@ Function to plot and save results, as well as inputs
     @info "... these are the parameters that were included: ", free_pars
     
     @info "... now we plot results"
-    make_plots(partitions, samples, free_pars, output_path)
+    make_plots(partitions, samples, free_pars, output_path,priors=priors)
     @info "...done!"
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
