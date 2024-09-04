@@ -16,6 +16,13 @@ using .ZeroNuFit
 
 
 function set_logger(config::Dict,output_path::String)
+"""
+Function which sets the logging for the program
+Parameters
+----------
+    config::Dict the fit config
+    output_path::String path to save the logs to
+"""
     if ("debug" in keys(config) && config["debug"]==true)
         terminal_log=global_logger(ConsoleLogger(stderr, LogLevel(Debug)))
     else
@@ -42,6 +49,9 @@ end
 
 # read JSON configuration file
 function read_config(file_path::String)
+"""
+Read the JASON configuration file and parse it into a Dict
+"""
     json_string = read(file_path, String)
     config = JSON.parse(json_string)
     return config
@@ -49,6 +59,9 @@ end
 
 # process parsed arguments for the main function
 function get_argparse()
+"""
+Parse the script arguments
+"""
     settings = ArgParseSettings(prog="LEGEND ovbb Bayesian unbinned fit",
                             description="",
                             commands_are_required = true)

@@ -31,8 +31,9 @@ end
 function build_likelihood_per_partition(idx_k, idx_part_with_events,part_k, events_k, p;stat_only=false)
 """
 Function which computes the partial likelihood for a single data partiton
+free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
 """
-    # free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
+
     ll_value = 0
     
     model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * p.S / m_76
@@ -106,7 +107,6 @@ Parameters
     - config: the Dict of the fit config
     - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
 """
-
     res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
     bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
 
