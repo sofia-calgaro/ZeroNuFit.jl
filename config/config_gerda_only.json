@@ -4,7 +4,7 @@
     "events":    ["config/events_gerda.json"],
     "output_path": "output/fit_gerda/",
     "overwrite":true,
-    "bat_fit": {"nsteps": 1e6, "nchains": 8},
+    "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "upper_signal":1e-25,
     "upper_bkg":1e-3,
     "stat_only":false
