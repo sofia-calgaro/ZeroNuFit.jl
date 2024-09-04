@@ -1,36 +1,43 @@
 {
     "events": [
         {
+            "experiment": "l200a",
             "energy": 1974.731,
             "timestamp": 1.686979922845444e9,
             "detector": "V09374A"
         },
         {
+            "experiment": "l200a",
             "energy": 1955.2213,
             "timestamp": 1.692672802971641e9,
             "detector": "V04199A"
         },
         {
+            "experiment": "l200a",
             "energy": 2095.7217,
             "timestamp": 1.6927790008873708e9,
             "detector": "B00061A"
         },
         {
+            "experiment": "l200a",
             "energy": 1996.4917,
             "timestamp": 1.699208260407016e9,
             "detector": "V08682B"
         },
         {
+            "experiment": "l200a",
             "energy": 1953.1427,
             "timestamp": 1.702864695368586e9,
             "detector": "V07647A"
         },
         {
+            "experiment": "l200a",
             "energy": 2040.261963,
             "timestamp": 1693877463,
             "detector": "P00661C"
         },
         {
+            "experiment": "l200a",
             "energy": 2016.76001,
             "timestamp": 1698552984,
             "detector": "V00048A"
