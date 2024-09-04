@@ -46,7 +46,8 @@ The takes inputs in JSON format, two files are needed a "partitions file" giving
 
 The file consists of a file of independent spectra to include in the fit (for example channels or partitions). A partition is defined uniquely by a range of time-stamps, a detector name and an experiment name. 
 
-> **&#9432;** In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. This allows to make fits where all detectors are fit together.
+> [!NOTE]
+> In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. This allows to make fits where all detectors are fit together.
 
 
 For each a dictonary is provided similar to the one below:
