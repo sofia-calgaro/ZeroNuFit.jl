@@ -59,7 +59,9 @@ FUnction to run the fit looping over partitions
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
 
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = config["bat_fit"]["nsteps"], nchains = config["bat_fit"]["nchains"])).result
+    Ns = Int(config["bat_fit"]["nsteps"])
+    Nc = Int(config["bat_fit"]["nchains"])
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result
 end
 
 
