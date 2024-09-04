@@ -3,6 +3,7 @@ using Plots
 using BAT, DensityInterface, IntervalSets
 using TypedTables
 using Cuba
+using PDFmerger: append_pdf!
 
 ##############################################
 ##############################################
@@ -88,7 +89,8 @@ function make_plots(partitions,samples,pars,output)
             mean = false, std = false, globalmode = true, marginalmode = true,
             nbins = 200
             ) # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
-            savefig(joinpath(output, "plots/$(par)_marg_posterior.pdf"))
+            savefig(p,"temp.pdf")
+            append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
             
         # multivariate parameters    
@@ -102,7 +104,8 @@ function make_plots(partitions,samples,pars,output)
                 mean = false, std = false, globalmode = true, marginalmode = true,
                 nbins = 200, xlabel = xlab, ylabel = ylab,
                 )
-                savefig(joinpath(output, "plots/$(par)_$(idx)_marg_posterior.pdf"))
+                savefig(p,"temp.pdf")
+                append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
                 ct += 1
             end
         end
