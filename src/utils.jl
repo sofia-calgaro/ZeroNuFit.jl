@@ -20,21 +20,33 @@ function get_partitions_new(part_path::String)
 
     """
         part_data_json = JSON.parsefile(part_path,dicttype=DataStructures.OrderedDict)
-        k = keys(part_data_json[1])
+
+        fit_groups = part_data_json["fit_groups"]
+
+        list_groups=collect(keys(fit_groups))
+        k = keys(part_data_json["partitions"][list_groups[1]][1])
         arrays=Dict()
         for key in k
             arrays[key]=[]
-        end
-        for part in part_data_json
-            for key in k
-                append!(arrays[key],[part[key]])
-                end
-    
-        end
 
+        end
+        arrays["fit_group"]=[]
+
+        for fit_group in keys(part_data_json["partitions"])
+            
+            for part in part_data_json["partitions"][fit_group]
+                for key in k
+                    append!(arrays[key],[part[key]])
+                    end
+                append!(arrays["fit_group"],[fit_group])
         
+            end
+
+        end
         #TODO: find a way to make this not hardcoded
-        tab = Table(detector=Array(arrays["detector"]),
+        tab = Table(experiment=Array(arrays["experiment"]),
+                    fit_group=Array(arrays["fit_group"]),
+                    detector=Array(arrays["detector"]),
                     start_ts=Array(arrays["start_ts"]),
                     end_ts=Array(arrays["end_ts"]),
                     eff_tot=Array(arrays["eff_tot"]),
@@ -44,8 +56,8 @@ function get_partitions_new(part_path::String)
                     exposure=Array(arrays["exposure"]),
                     bias =Array(arrays["bias"]),
                     bias_sigma =Array(arrays["bias_sigma"]))
-    
-        return tab
+        
+        return tab,fit_groups
 end
 
 function get_partition_event_index(events,partitions)
@@ -59,7 +71,6 @@ where the index counts the number of partitions with index<=i with,
 events and corresponds to the index of the parameters.
 
 """
-
     output = Vector{Int}(undef,length(partitions))
     counter=1
     for (idx,part) in enumerate(partitions)
@@ -88,7 +99,9 @@ function get_events(event_path,partitions)
             found=false
             
             for (idx,part) in enumerate(partitions)
-                if (part.detector==event["detector"] && event["timestamp"]<part.end_ts && event["timestamp"]>part.start_ts)
+                if (part.experiment ==event["experiment"] && part.detector==event["detector"] && 
+                    event["timestamp"]<part.end_ts && event["timestamp"]>part.start_ts)
+
                     append!(events[idx],event["energy"])
                     found=true
                 end
