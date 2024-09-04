@@ -78,6 +78,11 @@ function make_plots(partitions,samples,pars,output)
     unshaped_samples, f_flatten = bat_transform(Vector, samples)
     @debug "Unshaped samples:", bat_report(unshaped_samples)
     
+    # remove old file
+    if isfile(joinpath(output, "plots/marg_posterior.pdf"))
+        rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
+    end
+
     # marginalized posterior for each parameter
     ct = 1
     for par in pars
@@ -88,7 +93,8 @@ function make_plots(partitions,samples,pars,output)
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
             nbins = 200
-            ) # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
+            ) 
+            # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
             append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
@@ -104,6 +110,8 @@ function make_plots(partitions,samples,pars,output)
                 mean = false, std = false, globalmode = true, marginalmode = true,
                 nbins = 200, xlabel = xlab, ylabel = ylab,
                 )
+                plot!(-1:0.01:10,pdf(Normal(1,1),-1:0.01:10))
+                
                 savefig(p,"temp.pdf")
                 append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
                 ct += 1
