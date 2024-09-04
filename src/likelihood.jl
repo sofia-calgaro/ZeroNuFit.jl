@@ -19,11 +19,11 @@ Function to calculate the partial likelihood for a partition with 0 events
 
     ll_value = 0
     
-    model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
+    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * p.S / m_76
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
 
-    ll_value += -(model_tot_k+eps(model_tot_k)) # + alpha term ???
+    ll_value += -(model_tot_k+eps(model_tot_k)) 
     
     return ll_value
 end
@@ -36,11 +36,18 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
     
-    model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * p.S / m_76
+    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * p.S / m_76
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
+    
+    # constrain λ not to be negative
+    if model_tot_k < 0 
+        λ = eps(0.)
+    else
+        λ = model_tot_k+eps(model_tot_k)
+    end
 
-    ll_value += logpdf(Poisson(model_tot_k+eps(model_tot_k)), length(events_k)) # + alpha term ???
+    ll_value += logpdf(Poisson(λ), length(events_k))
     
     for i in events_k
         for evt_energy in events_k
@@ -112,7 +119,13 @@ Parameters
         end
     end
     if (stat_only==false)
-        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], res=res,bias=bias)
+        # get the minimum for α not to have negative values later on
+        all_eff_tot = partitions.eff_tot
+        all_eff_tot_sigma = partitions.eff_tot_sigma
+        ratio = - all_eff_tot ./ all_eff_tot_sigma 
+        α_min = maximum(ratio)
+        
+        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], α=Truncated(Normal(0,1),α_min,Inf), res=res, bias=bias)
     
     else 
         distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
