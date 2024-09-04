@@ -71,7 +71,6 @@ where the index counts the number of partitions with index<=i with,
 events and corresponds to the index of the parameters.
 
 """
-
     output = Vector{Int}(undef,length(partitions))
     counter=1
     for (idx,part) in enumerate(partitions)

@@ -99,7 +99,6 @@ Parameters
     - config: the Dict of the fit config
     - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
 """
-
     res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
     bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
 

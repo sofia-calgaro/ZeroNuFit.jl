@@ -33,23 +33,39 @@ Parameters:
             partitions=vcat(partitions,part_tmp)
         end
     end
-    @info display(partitions)
+    display(partitions)
     @info "... load events"
-    events = []
+    events_multi = []
     for event_path in config["events"]
-        append!(events,get_events(event_path,partitions))
+        println(event_path)
+        append!(events_multi,[get_events(event_path,partitions)])
     end
-    @debug "... extracted events:", events
+    events=[]
+    for i in 1:length(partitions)
+        
+        arr_tmp =[]
+        for sub in events_multi
+            if (sub[i]!=Any[])
+                append!(arr_tmp,sub[i])
+                end
+            end
+            append!(events,[arr_tmp])
+        end
+
+    @debug events
+    #@debug "... extracted events:", display(events)
 
     @info "get which partitions have events"
     part_event_index = get_partition_event_index(events,partitions)
-    
+    #@debug part_event_index
     # check if you want to overwrite the fit; if no results are present, then fit data
     if config["overwrite"] == true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
         @info "... now we run a fit"
+
         if config["overwrite"] == true
             @info "OVERWRITING THE PREVIOUS FIT!"
         end
+
         samples = run_fit_over_partitions(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
         @info "fit ran succesfully"
     else
