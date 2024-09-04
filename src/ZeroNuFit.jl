@@ -10,6 +10,13 @@ export run_analysis
 
 # function to run the unbinned fit
 function run_analysis(config::Dict{String, Any};output_path::String)
+"""
+Function which handeles running analysis
+Parameters:
+----------
+    config::Dict{String,Any} the fit configuration
+    output_path::String (keyword) the path to the output files folder
+"""
 
     @info "You entered into src/ZeroNuFit.jl"
     
@@ -35,7 +42,7 @@ function run_analysis(config::Dict{String, Any};output_path::String)
             @info "OVERWRITING THE PREVIOUS FIT!"
         end
         samples = run_fit_over_partitions(partitions[1],events[1],part_event_index,config=config,stat_only=config["stat_only"]) 
-    # load the already present fit
+        @info "fit ran succesfully"
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
@@ -43,7 +50,6 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     
     @info bat_report(samples)
     
-    # save results
     save_outputs(samples, config)
     
     return 

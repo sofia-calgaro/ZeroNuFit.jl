@@ -7,6 +7,7 @@ using Cuba
 include("likelihood.jl")
 
 # we need to define some building blocks
+#TODO: move to config
 center = 1930
 range_l = [1930, 2109, 2124]
 range_h = [2099, 2114, 2190]
