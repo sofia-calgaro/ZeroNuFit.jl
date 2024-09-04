@@ -89,13 +89,17 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
         par_entry = first_sample[par]
         
         if length(par_entry) == 1
-
             post = get_par_posterior(samples,par,idx=nothing)
+            if (par==:S || par==:B)
+                mini=0
+            else
+                mini=minimum(posterior)
+            end
 
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
-            nbins = 200,xlim=(minimum(post),maximum(post))
+            nbins = 200,xlim=(mini,maximum(post))
             ) 
              # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
