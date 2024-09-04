@@ -49,21 +49,43 @@ The file consists of a file of independent spectra to include in the fit (for ex
 > [!NOTE]
 > In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. This allows to make fits where all detectors are fit together.
 
+The partitions are grouped into `fit_groups` these are sets of partitions which are treated with the same background fit model and range.
+In the partitions file the user must provide the information on the fit groups and partitions, (organised by fit group). This file must be provided as a JSON file, this allows a full customisation of the fit.
 
-For each a dictonary is provided similar to the one below:
+This JSON file has a nested structure with two subdictonaries, the first with key "fit_groups", describing the groupings in the fit, and the second "partitions" giving a list of partitions for each fit group.
+An example is shown below.
 ```
- {      "experiment": "LEGEND",
-        "detector": "DET_0",
-        "start_ts": 1704950367,
-        "end_ts": 1708271505,
-        "eff_tot": 0.6,
-        "eff_tot_sigma": 0.1,
-        "fwhm": 3,
-        "fwhm_sigma": 1,
-        "exposure": 1,
-        "bias": 0.2,
-        "bias_sigma": 0.1
-    },
+{
+"fit_groups":{
+                "group_one":{
+                            "range":[[1930,2099],[2109,2114],[2124,2190]],
+                            "model":"uniform"
+                            }
+
+},
+"partitions": {
+                "group_one":[
+
+                            {  
+                                "experiment": "LEGEND",
+                                "detector": "DET_0",
+                                "start_ts": 1704950367,
+                                "end_ts": 1708271505,
+                                "eff_tot": 0.6,
+                                "eff_tot_sigma": 0.1,
+                                "fwhm": 3,
+                                "fwhm_sigma": 1,
+                                "exposure": 1,
+                                "bias": 0.2,
+                                "bias_sigma": 0.1
+                            }, ...
+                            ],
+                "group_two":...
+            },
+
+
+}
+            
 ```
 
 in future we will also add the possibility to customize further the fit. Currently it implements a fit to the energy spectrum with a uniform background which has the same rate for every partition. 
