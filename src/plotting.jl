@@ -69,20 +69,43 @@ end
 ##############################################
 ##############################################
 ##############################################
-function make_plots(samples,pars,output)    
+
+function make_plots(partitions,samples,pars,output)    
     
     name = split(output, "output/")[end]
-        
-    # marginalized posterior for each parameter
-    for par in pars
+    first_sample = samples.v[1]
+    unshaped_samples, f_flatten = bat_transform(Vector, samples)
+    @debug "Unshaped samples:", bat_report(unshaped_samples)
     
-        p=plot(
-        samples, par,
-        mean = false, std = false, globalmode = true, marginalmode = true,
-        nbins = 200
-        )
-        savefig(joinpath(output, "plots/$(par)_marg_posterior.pdf"))
+    # marginalized posterior for each parameter
+    ct = 1
+    for par in pars
+        par_entry = first_sample[par]
         
+        if length(par_entry) == 1
+            p=plot(
+            samples, par,
+            mean = false, std = false, globalmode = true, marginalmode = true,
+            nbins = 200
+            ) # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
+            savefig(joinpath(output, "plots/$(par)_marg_posterior.pdf"))
+            ct += 1
+            
+        # multivariate parameters    
+        else
+            for idx in 1:length(par_entry) 
+                xlab = string("$(par)[$(idx)]")
+                ylab = string("P($(par)[$(idx)])")
+                
+                p=plot(
+                unshaped_samples, ct,
+                mean = false, std = false, globalmode = true, marginalmode = true,
+                nbins = 200, xlabel = xlab, ylabel = ylab,
+                )
+                savefig(joinpath(output, "plots/$(par)_$(idx)_marg_posterior.pdf"))
+                ct += 1
+            end
+        end
     end
     
     # all parameters together

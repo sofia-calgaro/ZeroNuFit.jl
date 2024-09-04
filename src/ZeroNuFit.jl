@@ -44,7 +44,7 @@ function run_analysis(config::Dict{String, Any};output_path::String)
     @info bat_report(samples)
     
     # save results
-    save_outputs(samples, config)
+    save_outputs(partitions[1], samples, config)
     
     return 
 end
