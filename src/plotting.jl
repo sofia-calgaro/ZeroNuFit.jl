@@ -93,7 +93,7 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
             if (par==:S || par==:B)
                 mini=0
             else
-                mini=minimum(posterior)
+                mini=minimum(post)
             end
 
             p=plot(
