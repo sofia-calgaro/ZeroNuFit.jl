@@ -9,3 +9,4 @@ outputs/*
 output/*
 *.pdf
 *.h5
+data/*

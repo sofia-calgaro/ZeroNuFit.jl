@@ -53,14 +53,13 @@ function run_fit_over_partitions(partitions,events,part_event_index;config,stat_
 """
 FUnction to run the fit looping over partitions
 """
-    println(part_event_index)
     prior=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "build prior"
     likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only)
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
 
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^5, nchains = 4)).result
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = 10^6, nchains = 4)).result
 end
 
 
