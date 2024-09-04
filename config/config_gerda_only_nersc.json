@@ -3,11 +3,11 @@
     "partitions":["config/partitions_gerda.json"],
     "events":    ["config/events_gerda.json"],
     "meta_path": "/global/cfs/cdirs/m2676/data/lngs/l200/public/prodenv/prod-blind/ref-v2.1.2/inputs",
-    "output_path": "output/test_fit/",
-    "overwrite": true,
+    "output_path": "output/gerda_by_part_alpha/",
+    "overwrite": false,
     "bat_fit": {"nsteps": 1e6, "nchains": 4},
     "upper_signal":1e-25,
     "upper_bkg":1e-3,
-    "stat_only":true
+    "stat_only":false
 }
 

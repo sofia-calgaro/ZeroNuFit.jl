@@ -132,44 +132,22 @@ Function which saves results from the fit and copies the input config (for any f
 """
     
     global_modes = BAT.mode(samples) # quick estimate
-    @info "Global modes: ", global_modes
-    ltmp = NullLogger()
-
-    marginalized_modes=0
-    
-    with_logger(ltmp) do
-        marginalized_modes = BAT.bat_marginalmode(samples).result
-       end
-
-    @info "Marginalized modes: ", marginalized_modes
-    mean = BAT.mean(samples)
-    @info "Mean: ", mean
-    stddev = BAT.std(samples)
-    @info "Stddev: ", stddev
-    
     ##a more refined estimate would be the following 
     #using Optim
     #findmode_result = bat_findmode(
     #    samples,
-    #    OptimAlg(optalg = Optim.NelderMead(), init = ExplicitInit([samples_mode]))
+    #    OptimAlg(optalg = Optim.NelderMead(), init = ExplicitInit([global_modes]))
     #)
     #fit_par_values = findmode_result.result
     
-    """
-    # to be fixed
-    ci_68 = credible_interval(samples, 0.68)
-    ci_90 = credible_interval(samples, 0.90)
-    ci_95 = credible_interval(samples, 0.95)
-    
-    credible_intervals = Dict()
-    for par in keys(ci_68)
-        credible_intervals[par] = Dict(
-            "68%" => ci_68[par],
-            "90%" => ci_90[par],
-            "95%" => ci_95[par]
-        )
-    end
-    """
+    ltmp = NullLogger()
+    marginalized_modes=0
+    with_logger(ltmp) do
+        marginalized_modes = BAT.bat_marginalmode(samples).result
+       end
+
+    mean = BAT.mean(samples)
+    stddev = BAT.std(samples)
 
     data = Dict(
         "mean" => mean,
@@ -188,21 +166,22 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(samples, config)
+function save_outputs(partitions, samples, config)
 """
 Function to plot and save results, as well as inputs
 """
-    
     output_path = config["output_path"]
-    free_pars = (:B, :S) # paramnames(samples) why it does not work? TO DO
+    
+    first_sample = samples.v[1]
+    free_pars = keys(first_sample) # in format (:B, :S, ...) 
     @info "... these are the parameters that were included: ", free_pars
     
     @info "... now we plot results"
-    make_plots(samples, free_pars, output_path)
+    make_plots(partitions, samples, free_pars, output_path)
     @info "...done!"
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
-    if config["overwrite"] == false
+    if !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
         save_generated_samples(samples, output_path)
     @info "...done!"
     end
