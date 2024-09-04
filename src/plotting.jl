@@ -71,7 +71,7 @@ end
 ##############################################
 ##############################################
 
-function make_plots(partitions,samples,pars,output)    
+function make_plots(partitions,samples,pars,output;priors=nothing)    
     
     name = split(output, "output/")[end]
     first_sample = samples.v[1]
@@ -89,12 +89,15 @@ function make_plots(partitions,samples,pars,output)
         par_entry = first_sample[par]
         
         if length(par_entry) == 1
+
+            post = get_par_posterior(samples,par,idx=nothing)
+
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
-            nbins = 200
+            nbins = 200,xlim=(minimum(post),maximum(post))
             ) 
-            # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
+             # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
             append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
@@ -102,15 +105,16 @@ function make_plots(partitions,samples,pars,output)
         # multivariate parameters    
         else
             for idx in 1:length(par_entry) 
+                post = get_par_posterior(samples,par,idx=idx)
+
                 xlab = string("$(par)[$(idx)]")
                 ylab = string("P($(par)[$(idx)])")
                 
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
-                nbins = 200, xlabel = xlab, ylabel = ylab,
+                nbins = 200, xlabel = xlab, ylabel = ylab,xlim=(minimum(post),maximum(post))
                 )
-                plot!(-1:0.01:10,pdf(Normal(1,1),-1:0.01:10))
                 
                 savefig(p,"temp.pdf")
                 append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
