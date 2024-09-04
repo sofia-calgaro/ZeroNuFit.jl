@@ -5,6 +5,19 @@ using TypedTables
 using Cuba
 using PDFmerger: append_pdf!
 
+default(
+    titlefont = "Roboto",           # Font for plot titles
+    guidefont = "Roboto",               # Font for axis labels
+    tickfont = "Arial",              # Font for axis ticks
+    legendfont = "Arial",           # Font for the legend
+    framestyle=:box,               # Grid line transparency
+    background_color = :white   ,       # Background color of the plot,
+    titlefontsize=16,     # Global title font size
+    guidefontsize=16,     # Global axis label font size
+    tickfontsize=10,      # Global tick label font size
+    legendfontsize=10     # Global legend font size
+)
+
 ##############################################
 ##############################################
 ##############################################
@@ -82,7 +95,8 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
     if isfile(joinpath(output, "plots/marg_posterior.pdf"))
         rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
     end
-
+    p=plot()
+    savefig(joinpath(output, "plots/marg_posterior.pdf"))
     # marginalized posterior for each parameter
     ct = 1
     for par in pars
@@ -101,6 +115,14 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
             mean = false, std = false, globalmode = true, marginalmode = true,
             nbins = 200,xlim=(mini,maximum(post))
             ) 
+            x=range(mini, stop=maximum(post), length=1000)
+
+            # plot prior
+            if priors!=nothing
+                y=pdf(priors[par],x)
+                plot!(x,y,label="prior",color="grey")
+            end
+
              # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
             append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
