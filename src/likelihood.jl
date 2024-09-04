@@ -9,6 +9,7 @@ Qbb = 2039.06 # keV
 N_A = 6.022E23
 m_76 = 75.6E-3 # kg/mol
 deltaE = 240 # keV
+sig_units =1e-27 # signal is in units of this
 
 
 function build_likelihood_zero_obs_evts(part_k, p;stat_only=false)
@@ -19,7 +20,7 @@ Function to calculate the partial likelihood for a partition with 0 events
 
     ll_value = 0
     
-    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * p.S / m_76
+    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
 
@@ -36,7 +37,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
     
-    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * p.S / m_76
+    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
     model_b_k = deltaE * part_k.exposure * p.B
     model_tot_k = model_b_k + model_s_k
     

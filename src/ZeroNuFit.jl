@@ -53,11 +53,10 @@ Parameters:
         end
 
     @debug events
-    #@debug "... extracted events:", display(events)
 
     @info "get which partitions have events"
     part_event_index = get_partition_event_index(events,partitions)
-    #@debug part_event_index
+
     # check if you want to overwrite the fit; if no results are present, then fit data
     if config["overwrite"] == true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
         @info "... now we run a fit"
@@ -66,16 +65,18 @@ Parameters:
             @info "OVERWRITING THE PREVIOUS FIT!"
         end
 
-        samples = run_fit_over_partitions(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+        samples,prior = run_fit_over_partitions(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
         @info "fit ran succesfully"
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
+        prior=build_prior(partitions,part_event_index,config=config,stat_only=config["stat_only"])
+
     end
     
     @info bat_report(samples)
     
-    save_outputs(partitions, samples, config)
+    save_outputs(partitions, samples, config,priors=prior)
     
     return 
 end
