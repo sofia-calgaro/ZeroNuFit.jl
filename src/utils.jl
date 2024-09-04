@@ -119,7 +119,6 @@ Function which saves results from the fit and copies the input config (for any f
 """
     
     global_modes = BAT.mode(samples) # quick estimate
-    @info "Global modes: ", global_modes
     ##a more refined estimate would be the following 
     #using Optim
     #findmode_result = bat_findmode(
@@ -134,11 +133,8 @@ Function which saves results from the fit and copies the input config (for any f
         marginalized_modes = BAT.bat_marginalmode(samples).result
        end
 
-    @info "Marginalized modes: ", marginalized_modes
     mean = BAT.mean(samples)
-    @info "Mean: ", mean
     stddev = BAT.std(samples)
-    @info "Stddev: ", stddev
 
     data = Dict(
         "mean" => mean,
