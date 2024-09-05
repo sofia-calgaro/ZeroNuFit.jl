@@ -1,0 +1,118 @@
+{
+    "fit_groups": {
+        "mjd-DS0": {
+            "range": [
+                [
+                    1930,
+                    2099
+                ],
+                [
+                    2109,
+                    2114
+                ],
+                [
+                    2124,
+                    2190
+                ]
+            ],
+            "model": "uniform",
+            "bkg_name": "mjd-DS0"
+        },
+        "mjd-mod1": {
+            "range": [
+                [
+                    1930,
+                    2099
+                ],
+                [
+                    2109,
+                    2114
+                ],
+                [
+                    2124,
+                    2190
+                ]
+            ],
+            "model": "uniform",
+            "bkg_name": "mjd-mod1"
+        },
+        "mjd-mod2": {
+            "range": [
+                [
+                    1930,
+                    2099
+                ],
+                [
+                    2109,
+                    2114
+                ],
+                [
+                    2124,
+                    2190
+                ]
+            ],
+            "model": "uniform",
+            "bkg_name": "mjd-mod2"
+        }
+    },
+    "partitions": {
+        "mjd-DS0": [
+            {
+                "experiment": "MJD",
+                "detector": "ppc1",
+                "start_ts": 1000,
+                "end_ts": 1050,
+                "eff_tot": 0.611054,
+                "eff_tot_sigma": 0.023909,
+                "fwhm": 2.611,
+                "fwhm_sigma": 0.076,
+                "exposure": 1.26,
+                "bias": 0.0,
+                "bias_sigma": 0.2
+            }
+        ],
+        "mjd-mod1": [
+            {
+                "experiment": "MJD",
+                "detector": "ppc1",
+                "start_ts": 1100,
+                "end_ts": 1150,
+                "eff_tot": 0.62,
+                "eff_tot_sigma": 0.03,
+                "fwhm": 2.52,
+                "fwhm_sigma": 0.077,
+                "exposure": 49.6,
+                "bias": 0.0,
+                "bias_sigma": 0.2
+            }
+        ],
+        "mjd-mod2": [
+            {
+                "experiment": "MJD",
+                "detector": "ppc2",
+                "start_ts": 1100,
+                "end_ts": 1150,
+                "eff_tot": 0.62,
+                "eff_tot_sigma": 0.03,
+                "fwhm": 2.52,
+                "fwhm_sigma": 0.077,
+                "exposure": 17.06,
+                "bias": 0.0,
+                "bias_sigma": 0.2
+            },
+            {
+                "experiment": "MJD",
+                "detector": "icpc",
+                "start_ts": 1100,
+                "end_ts": 1150,
+                "eff_tot": 0.592331,
+                "eff_tot_sigma": 0.033576,
+                "fwhm": 2.55,
+                "fwhm_sigma": 0.092,
+                "exposure": 3.122,
+                "bias": 0.0,
+                "bias_sigma": 0.2
+            }
+        ]
+    }
+}
