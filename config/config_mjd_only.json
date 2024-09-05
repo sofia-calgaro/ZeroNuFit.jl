@@ -4,10 +4,10 @@
     "events":    ["config/events_mjd_new_part.json"],
     "output_path": "output/fit_mjd/",
     "overwrite":true,
-    "bat_fit": {"nsteps": 1e4, "nchains": 4},
+    "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "plot": {"fit_and_data": true, "bandfit_and_data": false},
     "signal": {"upper_bound":100, "prior": "uniform"},
-    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
+    "bkg": {"upper_bound":1e-2, "prior": "uniform"},
     "stat_only":false
 }
 
