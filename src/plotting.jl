@@ -95,7 +95,7 @@ Function to plot events in the Qbb analysis window and BAT fit results
         return model
     end
     
-    if fitband
+    if plotflag["bandfit_and_data"]
         plot!(p,1930:0.1:2190, find_a_name, samples, alpha=0.4,median=false,globalmode=false,fillalpha=0.3) #TO DO: take only some samples
         best_fit_pars = BAT.mode(samples)
         plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
