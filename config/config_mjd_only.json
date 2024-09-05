@@ -3,7 +3,7 @@
     "partitions":["config/partitions_mjd_new.json"],
     "events":    ["config/events_mjd_new_part.json"],
     "output_path": "output/fit_mjd/",
-    "overwrite":true,
+    "overwrite":false,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "plot": {"fit_and_data": true, "bandfit_and_data": false},
     "signal": {"upper_bound":100, "prior": "uniform"},

@@ -1,7 +1,8 @@
 using Random, LinearAlgebra, Statistics, Distributions, StatsBase
 using BAT, DensityInterface, IntervalSets
+
 using TypedTables
-using Plots
+using Plots,LaTeXStrings
 using Cuba
 
 # define some constants -TODO add to config
@@ -155,10 +156,19 @@ Parameters
         α_min = maximum(ratio)
         
         distrS, distrB = get_signal_bkg_priors(config)
-        return distprod(S=distrS,B=distrB, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias)
+        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),:B=>"B [cts/keV/kg/yr]",:α=>L"\alpha",:σ=>[],:𝛥=>[])
+        for (idx,r) in enumerate(res)
+            append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" - "*string(idx)*" [keV]"])
+            append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*string(idx)*" [keV]"])
+        end
+        
+        return distprod(S=distrS,B=distrB, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+        
     
     else 
-        distprod(S=0..config["signal"]["upper_bound"],B=0..config["bkg"]["upper_bound"])
+        distprod(S=0..config["signal"]["upper_bound"],B=0..config["bkg"]["upper_bound"]),
+        Dict(:S=>L"S [10^{-27} \text{yr^{-1}}]",:B=>"B [cts/keV/kg/yr]")
+
     end
     
 end
