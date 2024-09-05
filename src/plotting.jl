@@ -35,17 +35,19 @@ function constant(x)
 end
 
 
-function fit_model(p, part_k, x)
+function fit_model(p, part_k, x, is_in_part, part_idx)
     
     model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
     model_b_k = deltaE * part_k.exposure * p.B
 
-    # check if there is an event in the partition; if so, p.res
-    # if not, take the part_k.res set by the part
-    # (res, bias, alpha)
-    
     term1 = model_b_k / deltaE
-    term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), x)
+    
+    if is_in_part
+        term2 = model_s_k * pdf(Normal(Qbb + p.bias[part_idx], p.res[part_idx]), x)
+    else
+        term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), x)
+    end
+    
     return term1 + term2 
     
 end
@@ -54,7 +56,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_data(hist::Histogram,name,partitions,pars,samples,fitband)
+function plot_data(hist::Histogram,name,partitions,part_event_index,pars,samples,plotflag)
 """
 Function to plot events in the Qbb analysis window and BAT fit results
 """
@@ -82,8 +84,13 @@ Function to plot events in the Qbb analysis window and BAT fit results
     #plot fit model
     function find_a_name(params,x)
         model = 0
-        for part_k in partitions
-            model += fit_model(params, part_k, x)*diff(bin_edges)[1]
+        for (idx_k, part_k) in enumerate(partitions)
+            if part_event_index[idx_k]!=0
+                idx_k_with_events=part_event_index[idx_k]
+                model += fit_model(params, part_k, x, true, part_event_index[idx_k])*diff(bin_edges)[1]
+            else
+                model += fit_model(params, part_k, x, false, nothing)*diff(bin_edges)[1]
+            end
         end
         return model
     end
@@ -112,7 +119,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_fit_and_data(partitions, events, samples, pars, output, fitband)
+function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag)
     
     # create histo with energies 
     energies = []
@@ -125,7 +132,7 @@ function plot_fit_and_data(partitions, events, samples, pars, output, fitband)
     end
     hist_data = append!(Histogram(1930:1:2190), energies)
     
-    p_fit = plot_data(hist_data,"",partitions,pars,samples,fitband)
+    p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
     
     savefig(joinpath(output, "plots/fit_over_data.pdf"))
     
