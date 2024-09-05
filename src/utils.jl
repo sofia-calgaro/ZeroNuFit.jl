@@ -154,7 +154,8 @@ Function which saves results from the fit and copies the input config (for any f
     ci_95 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=2)
     ci_99 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=3)
     
-
+    quantile90 = Statistics.quantile(samples, 0.9)
+    
     data = Dict(
         "mean" => mean,
         "stddev" => stddev,
@@ -164,6 +165,7 @@ Function which saves results from the fit and copies the input config (for any f
         "ci_90" => ci_90,
         "ci_95" => ci_95,
         "ci_99" => ci_99,
+        "quantile90" => quantile90,
         "config" => config
     )
 
