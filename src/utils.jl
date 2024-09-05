@@ -148,13 +148,24 @@ Function which saves results from the fit and copies the input config (for any f
 
     mean = BAT.mean(samples)
     stddev = BAT.std(samples)
-
+    
+    ci_68 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=1)
+    ci_90 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=1.64)
+    ci_95 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=2)
+    ci_99 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=3)
+    
+    quantile90 = Statistics.quantile(samples, 0.9)
+    
     data = Dict(
         "mean" => mean,
         "stddev" => stddev,
         "global_modes" => global_modes,
         "marginalized_modes" => marginalized_modes,
-        #"credible_interval" => credible_intervals,
+        "ci_68" => ci_68,
+        "ci_90" => ci_90,
+        "ci_95" => ci_95,
+        "ci_99" => ci_99,
+        "quantile90" => quantile90,
         "config" => config
     )
 
@@ -166,7 +177,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, samples, config;priors=nothing)
+function save_outputs(partitions, events, part_event_index, samples, config;priors=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -175,10 +186,6 @@ Function to plot and save results, as well as inputs
     first_sample = samples.v[1]
     free_pars = keys(first_sample) # in format (:B, :S, ...) 
     @info "... these are the parameters that were included: ", free_pars
-    
-    @info "... now we plot results"
-    make_plots(partitions, samples, free_pars, output_path,priors=priors)
-    @info "...done!"
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
     if config["overwrite"]==true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
@@ -189,5 +196,15 @@ Function to plot and save results, as well as inputs
     @info "... now we save other useful results + config entries"
     save_results_into_json(samples, config, output_path)
     @info "...done!"
+    
+    @info "... now we plot marginalized posteriors (and priors)"
+    #plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors)
+    @info "...done!"
+    
+    if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]
+        @info "... now we plot fit & data"
+        plot_fit_and_data(partitions, events, part_event_index, samples, free_pars, output_path, config["plot"])
+        @info "...done!"
+    end
     
 end
