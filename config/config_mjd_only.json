@@ -5,9 +5,9 @@
     "output_path": "output/fit_mjd/",
     "overwrite":true,
     "bat_fit": {"nsteps": 1e4, "nchains": 4},
-    "plot": {"fit_and_data": true, "bandfit_and_data": true},
-    "upper_signal":100,
-    "upper_bkg":1e-2,
+    "plot": {"fit_and_data": true, "bandfit_and_data": false},
+    "signal": {"upper_bound":100, "prior": "uniform"},
+    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
     "stat_only":false
 }
 
