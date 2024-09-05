@@ -148,13 +148,22 @@ Function which saves results from the fit and copies the input config (for any f
 
     mean = BAT.mean(samples)
     stddev = BAT.std(samples)
+    
+    ci_68 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=1)
+    ci_90 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=1.64)
+    ci_95 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=2)
+    ci_99 = BAT.smallest_credible_intervals(samples, nsigma_equivalent=3)
+    
 
     data = Dict(
         "mean" => mean,
         "stddev" => stddev,
         "global_modes" => global_modes,
         "marginalized_modes" => marginalized_modes,
-        #"credible_interval" => credible_intervals,
+        "ci_68" => ci_68,
+        "ci_90" => ci_90,
+        "ci_95" => ci_95,
+        "ci_99" => ci_99,
         "config" => config
     )
 
