@@ -64,7 +64,7 @@ Function to plot events in the Qbb analysis window and BAT fit results
     counts=sum(hist.weights)
     p = plot() 
 
-    ymax = 1.5
+    ymax = 1.5*maximum(hist.weights)
     bin_edges = hist.edges[1]
     
     plot!(
@@ -100,13 +100,14 @@ Function to plot events in the Qbb analysis window and BAT fit results
         best_fit_pars = BAT.mode(samples)
         plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
     else
-        plot!(p,1930:0.1:2190, find_a_name, samples, alpha=0.4,median=false,globalmode=true,fillalpha=0.3)
+        best_fit_pars = BAT.mode(samples)
+        plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
     end
     
     # exclude the gamma lines
     shape_x = [2114,2114,2124,2124]
     shape_x2 = [2099,2099,2109,2109]
-    shape_y=[0,1.5,1.5,0]
+    shape_y=[0,ymax,ymax,0]
     
     plot!(p, shape_x, shape_y, fillalpha=0.3,fill=true, line=false,fillcolor=:blue, label=false)
     plot!(p, shape_x2, shape_y, fillalpha=0.3,fill=true, line=false,fillcolor=:blue, label=false)
@@ -126,7 +127,7 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
     for (idx_k, part_k) in enumerate(partitions)
         if events[idx_k] != Any[]
             for energy in events[idx_k]
-                append!(energies, events[idx_k])
+                append!(energies, energy)
             end
         end
     end
@@ -143,7 +144,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_marginal_distr(partitions,samples,pars,output;priors=nothing)    
+function plot_marginal_distr(partitions,samples,pars,output;priors=nothing,par_names=nothing)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -171,11 +172,15 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 mini=minimum(post)
             end
 
+            if (par_names !=nothing)
+                xname = par_names[par]
+            end
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
             nbins = 200, xlim=(mini,maximum(post))
             ) 
+            xaxis!(xname)
             x=range(mini, stop=maximum(post), length=1000)
 
             # plot prior
@@ -184,7 +189,6 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 plot!(x,y,label="prior",color="grey")
             end
 
-            # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
             append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
@@ -196,12 +200,16 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 xlab = string("$(par)[$(idx)]")
                 ylab = string("P($(par)[$(idx)])")
-                
+                if (par_names !=nothing)
+                    println(par_names)
+                    xname = par_names[par][idx]
+                end
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
                 nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post))
                 )
+                xaxis!(xname)
                 
                 savefig(p,"temp.pdf")
                 append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
