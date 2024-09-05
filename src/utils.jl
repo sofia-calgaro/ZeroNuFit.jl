@@ -181,7 +181,7 @@ Function to plot and save results, as well as inputs
     @info "...done!"
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
-    if !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
+    if config["overwrite"]==true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
         save_generated_samples(samples, output_path)
     @info "...done!"
     end
