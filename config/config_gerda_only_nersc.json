@@ -2,12 +2,12 @@
     "debug":false,
     "partitions":["config/partitions_gerda_new.json"],
     "events":    ["config/events_gerda.json"],
-    "output_path": "output/gerda_by_part_alpha/",
+    "output_path": "output/prova/",
     "overwrite": false,
-    "bat_fit": {"nsteps": 1e6, "nchains": 4},
+    "bat_fit": {"nsteps": 1e4, "nchains": 4},
     "plot": {"fit_and_data": false, "bandfit_and_data": false},
-    "upper_signal":1e-25,
-    "upper_bkg":1e-3,
+    "signal": {"upper_bound":1e-25, "prior": "uniform"},
+    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
     "stat_only":false
 }
 
