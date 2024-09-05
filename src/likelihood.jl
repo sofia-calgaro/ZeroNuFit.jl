@@ -56,9 +56,9 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
             term1 = model_b_k / deltaE # background
 
             if (stat_only==true)
-                term2 = model_s_k * pdf(Normal(Qbb + part_k.Δ​​, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
+                term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
             else
-                term2 = model_s_k * pdf(Normal(Qbb + p.Δ​​[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
+                term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
             end
             ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
@@ -126,7 +126,7 @@ Parameters
         ratio = - all_eff_tot ./ all_eff_tot_sigma 
         α_min = maximum(ratio)
         
-        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], α=Truncated(Normal(0,1),α_min,Inf), σ=res, Δ​​=bias)
+        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias)
     
     else 
         distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
