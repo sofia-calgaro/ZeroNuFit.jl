@@ -1,6 +1,6 @@
 {
     "debug":false,
-    "partitions":["config/partitions_gerda.json"],
+    "partitions":["config/partitions_gerda_new.json"],
     "events":    ["config/events_gerda.json"],
     "meta_path": "/global/cfs/cdirs/m2676/data/lngs/l200/public/prodenv/prod-blind/ref-v2.1.2/inputs",
     "output_path": "output/gerda_by_part_alpha/",
