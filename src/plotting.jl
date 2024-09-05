@@ -43,7 +43,7 @@ function fit_model(p, part_k, x, is_in_part, part_idx)
     term1 = model_b_k / deltaE
     
     if is_in_part
-        term2 = model_s_k * pdf(Normal(Qbb + p.bias[part_idx], p.res[part_idx]), x)
+        term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[part_idx], p.σ[part_idx]), x)
     else
         term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), x)
     end
