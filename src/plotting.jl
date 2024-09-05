@@ -3,6 +3,17 @@ using Plots
 using BAT, DensityInterface, IntervalSets
 using TypedTables
 using Cuba
+using Base.Filesystem
+using PDFmerger: append_pdf!
+
+default(
+    framestyle=:box,               # Grid line transparency
+    background_color = :white   ,       # Background color of the plot,
+    titlefontsize=12,     # Global title font size
+    guidefontsize=12,     # Global axis label font size
+    tickfontsize=12,      # Global tick label font size
+    legendfontsize=12     # Global legend font size
+)
 
 ##############################################
 ##############################################
@@ -70,39 +81,64 @@ end
 ##############################################
 ##############################################
 
-function make_plots(partitions,samples,pars,output)    
+function make_plots(partitions,samples,pars,output;priors=nothing)    
     
     name = split(output, "output/")[end]
     first_sample = samples.v[1]
     unshaped_samples, f_flatten = bat_transform(Vector, samples)
     @debug "Unshaped samples:", bat_report(unshaped_samples)
     
+    # remove old file
+    if isfile(joinpath(output, "plots/marg_posterior.pdf"))
+        Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
+    end
     # marginalized posterior for each parameter
     ct = 1
     for par in pars
         par_entry = first_sample[par]
         
         if length(par_entry) == 1
+            post = get_par_posterior(samples,par,idx=nothing)
+            if (par==:S || par==:B)
+                mini=0
+            else
+                mini=minimum(post)
+            end
+
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
-            nbins = 200
-            ) # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
-            savefig(joinpath(output, "plots/$(par)_marg_posterior.pdf"))
+            nbins = 200,xlim=(mini,maximum(post))
+            ) 
+            x=range(mini, stop=maximum(post), length=1000)
+
+            # plot prior
+            if priors!=nothing
+                y=pdf(priors[par],x)
+                plot!(x,y,label="prior",color="grey")
+            end
+
+             # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
+            savefig(p,"temp.pdf")
+            append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
             
         # multivariate parameters    
         else
             for idx in 1:length(par_entry) 
+                post = get_par_posterior(samples,par,idx=idx)
+
                 xlab = string("$(par)[$(idx)]")
                 ylab = string("P($(par)[$(idx)])")
                 
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
-                nbins = 200, xlabel = xlab, ylabel = ylab,
+                nbins = 200, xlabel = xlab, ylabel = ylab,xlim=(minimum(post),maximum(post))
                 )
-                savefig(joinpath(output, "plots/$(par)_$(idx)_marg_posterior.pdf"))
+                
+                savefig(p,"temp.pdf")
+                append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
                 ct += 1
             end
         end
