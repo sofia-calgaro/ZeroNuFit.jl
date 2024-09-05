@@ -200,6 +200,7 @@ Function to plot and save results, as well as inputs
     
     @info "... now we plot marginalized posteriors (and priors)"
     plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"])
+
     @info "...done!"
     
     if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]
