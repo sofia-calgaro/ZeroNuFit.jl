@@ -5,6 +5,7 @@ using TypedTables
 using Cuba
 using Base.Filesystem
 using PDFmerger: append_pdf!
+using ColorSchemes
 
 default(
     framestyle=:box,               # Grid line transparency
@@ -20,6 +21,15 @@ N_A = 6.022E23
 m_76 = 75.6E-3 # kg/mol
 deltaE = 240 # keV
 sig_units =1e-27 # signal is in units of this
+
+tol_colors=ColorSchemes.tol_muted
+color_schemes=Dict(:blue =>[tol_colors[1],tol_colors[3],tol_colors[2]],
+                   :default=>BAT.default_colors,
+                   :red=>[:red4,:red,:salmon],
+                   :green=>[:darkgreen,:chartreuse3,:palegreen1],
+                   :purple=>[tol_colors[8],tol_colors[9],tol_colors[7]],
+                   :muted=>[:olivedrab,:goldenrod,:indianred1]
+)
 
 ##############################################
 ##############################################
@@ -132,7 +142,6 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
         end
     end
     hist_data = append!(Histogram(1930:1:2190), energies)
-    
     p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
     
     savefig(joinpath(output, "plots/fit_over_data.pdf"))
@@ -144,7 +153,10 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_marginal_distr(partitions,samples,pars,output;priors=nothing,par_names=nothing)    
+
+
+
+function plot_marginal_distr(partitions,samples,pars,output;priors=nothing,par_names=nothing,plot_config=nothing)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -159,12 +171,26 @@ Function to plot 1D and 2D marginalized distributions (and priors)
         Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
     end
     
+
+    # get a color scheme
+    if plot_config!=nothing && haskey(plot_config,"scheme")
+        color_scheme = color_schemes[Symbol(plot_config["scheme"])] 
+    else 
+        color_scheme=BAT.default_colors
+    end
+    if plot_config!=nothing && haskey(plot_config,"fill_alpha")
+        alpha=plot_config["fill_alpha"]
+    else 
+        alpha=1
+    end
+
     # 1D posteriors
     ct = 1
     for par in pars
         par_entry = first_sample[par]
         
         if length(par_entry) == 1
+
             post = get_par_posterior(samples,par,idx=nothing)
             if (par==:S || par==:B)
                 mini=0
@@ -175,10 +201,13 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             if (par_names !=nothing)
                 xname = par_names[par]
             end
+
+            
+
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
-            nbins = 200, xlim=(mini,maximum(post))
+            nbins = 200, xlim=(mini,maximum(post)),colors=color_scheme,alpha=alpha,lw=0,linecolor=:black
             ) 
             xaxis!(xname)
             x=range(mini, stop=maximum(post), length=1000)
@@ -186,7 +215,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             # plot prior
             if priors!=nothing
                 y=pdf(priors[par],x)
-                plot!(x,y,label="prior",color="grey")
+                plot!(x,y,label="prior",color="black")
             end
 
             savefig(p,"temp.pdf")
@@ -201,13 +230,13 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 xlab = string("$(par)[$(idx)]")
                 ylab = string("P($(par)[$(idx)])")
                 if (par_names !=nothing)
-                    println(par_names)
                     xname = par_names[par][idx]
                 end
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
-                nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post))
+                nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post)),colors=color_scheme,alpha=alpha,
+                linecolor=:black
                 )
                 xaxis!(xname)
                 

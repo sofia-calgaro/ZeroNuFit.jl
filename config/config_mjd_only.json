@@ -5,7 +5,12 @@
     "output_path": "output/fit_mjd/",
     "overwrite":false,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
-    "plot": {"fit_and_data": true, "bandfit_and_data": false},
+    "plot": {
+            "fit_and_data": true,
+            "bandfit_and_data": false,
+            "scheme":"blue",
+            "alpha":0.3
+        },
     "signal": {"upper_bound":100, "prior": "uniform"},
     "bkg": {"upper_bound":1e-2, "prior": "uniform"},
     "stat_only":false
