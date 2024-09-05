@@ -177,7 +177,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, events, part_event_index, samples, config;priors=nothing)
+function save_outputs(partitions, events, part_event_index, samples, config;priors=nothing,par_names=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -199,7 +199,7 @@ Function to plot and save results, as well as inputs
     @info "...done!"
     
     @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors)
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names)
     @info "...done!"
     
     if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]

@@ -144,7 +144,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_marginal_distr(partitions,samples,pars,output;priors=nothing)    
+function plot_marginal_distr(partitions,samples,pars,output;priors=nothing,par_names=nothing)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -172,11 +172,15 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 mini=minimum(post)
             end
 
+            if (par_names !=nothing)
+                xname = par_names[par]
+            end
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
             nbins = 200, xlim=(mini,maximum(post))
             ) 
+            xaxis!(xname)
             x=range(mini, stop=maximum(post), length=1000)
 
             # plot prior
@@ -196,12 +200,16 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 xlab = string("$(par)[$(idx)]")
                 ylab = string("P($(par)[$(idx)])")
-                
+                if (par_names !=nothing)
+                    println(par_names)
+                    xname = par_names[par][idx]
+                end
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
                 nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post))
                 )
+                xaxis!(xname)
                 
                 savefig(p,"temp.pdf")
                 append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)

@@ -54,7 +54,7 @@ function run_fit_over_partitions(partitions,events,part_event_index;config,stat_
 """
 FUnction to run the fit looping over partitions
 """
-    prior=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
+    prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "built prior"
     likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only)
     @info "built likelihood"
@@ -63,7 +63,7 @@ FUnction to run the fit looping over partitions
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result,prior
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result,prior,par_names
 end
 
 
