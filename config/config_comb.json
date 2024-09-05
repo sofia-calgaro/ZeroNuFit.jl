@@ -5,6 +5,7 @@
     "output_path": "output/fit_l200_gerda/",
     "overwrite":true,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
+    "plot": {"fit_band": false},
     "upper_signal":1e-25,
     "upper_bkg":1e-3,
     "stat_only":false

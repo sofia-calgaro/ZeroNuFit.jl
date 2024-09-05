@@ -14,6 +14,12 @@ default(
     tickfontsize=12,      # Global tick label font size
     legendfontsize=8     # Global legend font size
 )
+# define some constants -TODO add to config
+Qbb = 2039.06 # keV
+N_A = 6.022E23
+m_76 = 75.6E-3 # kg/mol
+deltaE = 240 # keV
+sig_units =1e-27 # signal is in units of this
 
 ##############################################
 ##############################################
@@ -29,38 +35,42 @@ function constant(x)
 end
 
 
+function fit_model(p, part_k, x)
+    
+    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
+    model_b_k = deltaE * part_k.exposure * p.B
+
+    # check if there is an event in the partition; if so, p.res
+    # if not, take the part_k.res set by the part
+    # (res, bias, alpha)
+    
+    term1 = model_b_k / deltaE
+    term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), x)
+    return term1 + term2 
+    
+end
+
 
 ##############################################
 ##############################################
 ##############################################
-function plot_data(hist::Histogram,name,samples=nothing)
+function plot_data(hist::Histogram,name,partitions,pars,samples,fitband)
 """
 Function to plot events in the Qbb analysis window and BAT fit results
 """
     
     counts=sum(hist.weights)
     p = plot() 
-    #func=nothing
-    #fitfunction=nothing
 
     ymax = 1.5
     bin_edges = hist.edges[1]
-    function binfitfunction(x,params)
-        fitfunction(x,params)*diff(bin_edges)[1]
-    end
     
-    #if (samples!=nothing)
-    #    plot!(p,1930:0.1:2190, binfitfunction, samples,alpha=0.4,median=false,globalmode=false,fillalpha=0.3)
-    #end
-    #if (func !=nothing)
-    #    plot!(p,1930:0.1:2190,x -> diff(bin_edges)[1]*counts*func(x),label="constant",lw=2,color="red")
-    #end
     plot!(
        p, hist,
         st = :steps, label = "Data",
         title ="$name",
         xlabel="Energy (keV)",
-        ylabel="Counts/ (2 keV)",
+        ylabel="Counts/ (1 keV)",
         ylim=(0,ymax),
         xlim=(1930,2190),
         color="dark blue",
@@ -68,7 +78,24 @@ Function to plot events in the Qbb analysis window and BAT fit results
         framestyle = :box
         
     )
-  
+    
+    #plot fit model
+    function find_a_name(params,x)
+        model = 0
+        for part_k in partitions
+            model += fit_model(params, part_k, x)*diff(bin_edges)[1]
+        end
+        return model
+    end
+    
+    if fitband
+        plot!(p,1930:0.1:2190, find_a_name, samples, alpha=0.4,median=false,globalmode=false,fillalpha=0.3) #TO DO: take only some samples
+        best_fit_pars = BAT.mode(samples)
+        plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
+    else
+        plot!(p,1930:0.1:2190, find_a_name, samples, alpha=0.4,median=false,globalmode=true,fillalpha=0.3)
+    end
+    
     # exclude the gamma lines
     shape_x = [2114,2114,2124,2124]
     shape_x2 = [2099,2099,2109,2109]
@@ -85,9 +112,8 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_fit_and_data(partitions, events, samples, free_pars, output)
+function plot_fit_and_data(partitions, events, samples, pars, output, fitband)
     
-    # fit over data (TO DO)
     # create histo with energies 
     energies = []
     for (idx_k, part_k) in enumerate(partitions)
@@ -97,8 +123,10 @@ function plot_fit_and_data(partitions, events, samples, free_pars, output)
             end
         end
     end
-    hist_data = append!(Histogram(1930:2:2190), energies)
-    p_fit = plot_data(hist_data,"",samples)
+    hist_data = append!(Histogram(1930:1:2190), energies)
+    
+    p_fit = plot_data(hist_data,"",partitions,pars,samples,fitband)
+    
     savefig(joinpath(output, "plots/fit_over_data.pdf"))
     
 end
@@ -122,7 +150,8 @@ Function to plot 1D and 2D marginalized distributions (and priors)
     if isfile(joinpath(output, "plots/marg_posterior.pdf"))
         Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
     end
-    # marginalized posterior for each parameter
+    
+    # 1D posteriors
     ct = 1
     for par in pars
         par_entry = first_sample[par]
@@ -148,7 +177,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 plot!(x,y,label="prior",color="grey")
             end
 
-             # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
+            # TO DO: add a way to constrain the posterior in [0; max from config] or [0; right-est entry on the x axis for signal]
             savefig(p,"temp.pdf")
             append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
             ct += 1
@@ -174,7 +203,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
         end
     end
     
-    # all parameters together
+    # 2D posteriors
     plot(
         samples,
         mean = false, std = false, globalmode = false, marginalmode = true,
