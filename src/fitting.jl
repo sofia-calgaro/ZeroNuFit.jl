@@ -63,7 +63,7 @@ FUnction to run the fit looping over partitions
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])
-    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result
+    return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result,prior
 end
 
 
@@ -101,6 +101,27 @@ function get_qbb_posterior(fit_function,samples)
     return qbb
 end
 
+##############################################
+##############################################
+##############################################
+function get_par_posterior(samples,par;idx)
+    
+    pars=[]
+    
+    for samp in samples
+        v=samp.v
+        weight=samp.weight
+        for w in 1:1:weight
+            if (idx==nothing)
+                append!(pars,v[par])
+            else
+                append!(pars,v[par][idx])
+            end
+        end
+    end
+   
+    return pars
+end
 
 
 ##############################################
