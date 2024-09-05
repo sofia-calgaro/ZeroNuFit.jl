@@ -12,7 +12,7 @@ default(
     titlefontsize=12,     # Global title font size
     guidefontsize=12,     # Global axis label font size
     tickfontsize=12,      # Global tick label font size
-    legendfontsize=12     # Global legend font size
+    legendfontsize=8     # Global legend font size
 )
 
 ##############################################
@@ -33,9 +33,15 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_data(hist::Histogram,name,func=nothing,samples=nothing,fitfunction=nothing)
+function plot_data(hist::Histogram,name,samples=nothing)
+"""
+Function to plot events in the Qbb analysis window and BAT fit results
+"""
+    
     counts=sum(hist.weights)
     p = plot() 
+    #func=nothing
+    #fitfunction=nothing
 
     ymax = 1.5
     bin_edges = hist.edges[1]
@@ -43,18 +49,18 @@ function plot_data(hist::Histogram,name,func=nothing,samples=nothing,fitfunction
         fitfunction(x,params)*diff(bin_edges)[1]
     end
     
-    if (samples!=nothing)
-        plot!(p,1930:0.1:2190, binfitfunction, samples,alpha=0.4,median=false,globalmode=false,fillalpha=0.3)
-    end
-    if (func !=nothing)
-        plot!(p,1930:0.1:2190,x -> diff(bin_edges)[1]*counts*func(x),label="constant",lw=2,color="red")
-    end
+    #if (samples!=nothing)
+    #    plot!(p,1930:0.1:2190, binfitfunction, samples,alpha=0.4,median=false,globalmode=false,fillalpha=0.3)
+    #end
+    #if (func !=nothing)
+    #    plot!(p,1930:0.1:2190,x -> diff(bin_edges)[1]*counts*func(x),label="constant",lw=2,color="red")
+    #end
     plot!(
        p, hist,
         st = :steps, label = "Data",
-        title ="$name data",
-        xlabel="Energy [keV]",
-        ylabel="counts/2 keV",
+        title ="$name",
+        xlabel="Energy (keV)",
+        ylabel="Counts/ (2 keV)",
         ylim=(0,ymax),
         xlim=(1930,2190),
         color="dark blue",
@@ -63,12 +69,11 @@ function plot_data(hist::Histogram,name,func=nothing,samples=nothing,fitfunction
         
     )
   
+    # exclude the gamma lines
     shape_x = [2114,2114,2124,2124]
     shape_x2 = [2099,2099,2109,2109]
-
     shape_y=[0,1.5,1.5,0]
     
-    # exclude the gamma lines
     plot!(p, shape_x, shape_y, fillalpha=0.3,fill=true, line=false,fillcolor=:blue, label=false)
     plot!(p, shape_x2, shape_y, fillalpha=0.3,fill=true, line=false,fillcolor=:blue, label=false)
     
@@ -80,8 +85,33 @@ end
 ##############################################
 ##############################################
 ##############################################
+function plot_fit_and_data(partitions, events, samples, free_pars, output)
+    
+    # fit over data (TO DO)
+    # create histo with energies 
+    energies = []
+    for (idx_k, part_k) in enumerate(partitions)
+        if events[idx_k] != Any[]
+            for energy in events[idx_k]
+                append!(energies, events[idx_k])
+            end
+        end
+    end
+    hist_data = append!(Histogram(1930:2:2190), energies)
+    p_fit = plot_data(hist_data,"",samples)
+    savefig(joinpath(output, "plots/fit_over_data.pdf"))
+    
+end
 
-function make_plots(partitions,samples,pars,output;priors=nothing)    
+
+
+##############################################
+##############################################
+##############################################
+function plot_marginal_distr(partitions,samples,pars,output;priors=nothing)    
+"""
+Function to plot 1D and 2D marginalized distributions (and priors)
+"""
     
     name = split(output, "output/")[end]
     first_sample = samples.v[1]
@@ -108,7 +138,7 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
             p=plot(
             samples, par,
             mean = false, std = false, globalmode = true, marginalmode = true,
-            nbins = 200,xlim=(mini,maximum(post))
+            nbins = 200, xlim=(mini,maximum(post))
             ) 
             x=range(mini, stop=maximum(post), length=1000)
 
@@ -134,7 +164,7 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
-                nbins = 200, xlabel = xlab, ylabel = ylab,xlim=(minimum(post),maximum(post))
+                nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post))
                 )
                 
                 savefig(p,"temp.pdf")
@@ -151,22 +181,6 @@ function make_plots(partitions,samples,pars,output;priors=nothing)
         nbins = 200
     )
     savefig(joinpath(output, "plots/all_marg_posterior_2D.pdf"))
-        
-    # fit over data (TO DO)
-    """
-    # create histo with energies 
-    energies = []
-    for (idx_k, part_k) in enumerate(partitions[1])
-        if events[1][idx_k] != Any[]
-            for energy in events[1][idx_k]
-                append!(energies, events[1][idx_k])
-            end
-        end
-    end
-    hist_data = append!(Histogram(1930:2:2190), energies)
-    p_fit = plot_data(hist,name,nothing,samples,fit_function)
-    savefig(joinpath(output, "plots/fit_over_data.pdf"))
-    """
         
 end
 
@@ -196,7 +210,6 @@ function plot_qbb_comp(qbb,name)
             framestyle = :box)
               
     end
-    #display(p)
   
 end
 
@@ -226,6 +239,5 @@ function plot_n_comp(ns,name)
             framestyle = :box)
               
     end
-    #display(p)
   
 end

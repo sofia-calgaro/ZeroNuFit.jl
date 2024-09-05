@@ -177,7 +177,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, samples, config;priors=nothing)
+function save_outputs(partitions, events, samples, config;priors=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -187,8 +187,12 @@ Function to plot and save results, as well as inputs
     free_pars = keys(first_sample) # in format (:B, :S, ...) 
     @info "... these are the parameters that were included: ", free_pars
     
-    @info "... now we plot results"
-    make_plots(partitions, samples, free_pars, output_path,priors=priors)
+    @info "... now we plot marginalized posteriors (and priors)"
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors)
+    @info "...done!"
+    
+    @info "... now we plot fit & data"
+    plot_fit_and_data(partitions, events, samples, free_pars, output_path)
     @info "...done!"
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
