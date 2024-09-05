@@ -179,7 +179,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
         color_scheme=BAT.default_colors
     end
     if plot_config!=nothing && haskey(plot_config,"fill_alpha")
-        alpha=plot_config["fill_alpha"]
+        alpha=plot_config["alpha"]
     else 
         alpha=1
     end
