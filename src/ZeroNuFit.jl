@@ -76,7 +76,7 @@ Parameters:
     
     @info bat_report(samples)
     
-    save_outputs(partitions, samples, config,priors=prior)
+    save_outputs(partitions, events, part_event_index, samples, config,priors=prior)
     
     return 
 end
