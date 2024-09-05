@@ -100,9 +100,37 @@ Returns:
     )
 end
 
+
+##############################################
+##############################################
+##############################################
+function get_signal_bkg_priors(config)
+"""
+Defines specific priors for signal and background contributions
+Parameters
+    - config: the Dict of the fit config
+"""
+    
+    uppS = config["signal"]["upper_bound"]
+    uppB = config["bkg"]["upper_bound"]
+    
+    if config["signal"]["prior"] == "uniform"
+        distrS = 0..uppS
+    end
+    if config["bkg"]["prior"] == "uniform"
+        distrB = 0..uppB
+    end
+    
+    return distrS, distrB
+end
+
+##############################################
+##############################################
+##############################################
 function build_prior(partitions,part_event_index;config,stat_only=false)
 """
 Builds the priors for use in the fit
+----------
 Parameters
     - partitions:Table of the partition info
     - config: the Dict of the fit config
@@ -126,13 +154,12 @@ Parameters
         ratio = - all_eff_tot ./ all_eff_tot_sigma 
         α_min = maximum(ratio)
         
-        return distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"], α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias)
+        distrS, distrB = get_signal_bkg_priors(config)
+        return distprod(S=distrS,B=distrB, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias)
     
     else 
-        distprod(S=0..config["upper_signal"],B=0..config["upper_bkg"])
+        distprod(S=0..config["signal"]["upper_bound"],B=0..config["bkg"]["upper_bound"])
     end
     
-
-
 end
 
