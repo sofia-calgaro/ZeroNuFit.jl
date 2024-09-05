@@ -187,14 +187,6 @@ Function to plot and save results, as well as inputs
     free_pars = keys(first_sample) # in format (:B, :S, ...) 
     @info "... these are the parameters that were included: ", free_pars
     
-    @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors)
-    @info "...done!"
-    
-    @info "... now we plot fit & data"
-    plot_fit_and_data(partitions, events, samples, free_pars, output_path)
-    @info "...done!"
-    
     @info "... now we save samples (untouched if we do not want to overwrite)"
     if !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
         save_generated_samples(samples, output_path)
@@ -203,6 +195,14 @@ Function to plot and save results, as well as inputs
     
     @info "... now we save other useful results + config entries"
     save_results_into_json(samples, config, output_path)
+    @info "...done!"
+    
+    @info "... now we plot marginalized posteriors (and priors)"
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors)
+    @info "...done!"
+    
+    @info "... now we plot fit & data"
+    plot_fit_and_data(partitions, events, samples, free_pars, output_path, config["plot"]["fit_band"])
     @info "...done!"
     
 end
