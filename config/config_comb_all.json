@@ -1,0 +1,19 @@
+{
+    "debug":false,
+    "partitions":["config/partitions_gerda_new.json","config/partitions_l200.json","config/partitions_mjd_new.json"],
+    "events":    ["config/events_gerda.json","config/events_l200.json","config/events_mjd_new_part.json"],
+    "output_path": "output/fit_mjd_l200_gerda/",
+    "overwrite":true,
+
+    "bat_fit": {"nsteps": 1e5, "nchains": 4},
+    "plot": {
+            "fit_and_data": true,
+            "bandfit_and_data": false,
+            "scheme":"blue",
+            "alpha":0.3
+        },
+    "signal": {"upper_bound":100, "prior": "uniform"},
+    "bkg": {"upper_bound":5e-2, "prior": "uniform"},
+    "stat_only":false
+}
+

@@ -47,8 +47,9 @@ end
 
 function fit_model(p, part_k, x, is_in_part, part_idx)
     
+    b_name=part_k.bkg_name
     model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    model_b_k = deltaE * part_k.exposure * p.B
+    model_b_k = deltaE * part_k.exposure * p[b_name]
 
     term1 = model_b_k / deltaE
     

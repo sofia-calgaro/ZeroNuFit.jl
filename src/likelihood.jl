@@ -166,6 +166,7 @@ Parameters
             bias[i_new] =Normal(part.bias,part.bias_sigma)
         end
     end
+    
     if (stat_only==false)
         
         # get the minimum for α not to have negative values later on
