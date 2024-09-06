@@ -143,7 +143,7 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
     end
     hist_data = append!(Histogram(1930:1:2190), energies)
     p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
-    
+
     savefig(joinpath(output, "plots/fit_over_data.pdf"))
     
 end
@@ -178,7 +178,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
     else 
         color_scheme=BAT.default_colors
     end
-    if plot_config!=nothing && haskey(plot_config,"fill_alpha")
+    if plot_config!=nothing && haskey(plot_config,"alpha")
         alpha=plot_config["alpha"]
     else 
         alpha=1
@@ -210,6 +210,9 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             nbins = 200, xlim=(mini,maximum(post)),colors=color_scheme,alpha=alpha,lw=0,linecolor=:black
             ) 
             xaxis!(xname)
+            yaxis!("Probability Density.")
+            ylims!(0,ylims()[2])
+            
             x=range(mini, stop=maximum(post), length=1000)
 
             # plot prior
@@ -228,7 +231,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 post = get_par_posterior(samples,par,idx=idx)
 
                 xlab = string("$(par)[$(idx)]")
-                ylab = string("P($(par)[$(idx)])")
+                ylab = string("Probability Density.")
                 if (par_names !=nothing)
                     xname = par_names[par][idx]
                 end
@@ -239,7 +242,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 linecolor=:black
                 )
                 xaxis!(xname)
-                
+                ylims!(0,ylims()[2])
                 savefig(p,"temp.pdf")
                 append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
                 ct += 1

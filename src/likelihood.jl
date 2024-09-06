@@ -20,9 +20,10 @@ Function to calculate the partial likelihood for a partition with 0 events
 """
 
     ll_value = 0
-    
+    b_name = part_k.bkg_name
+
     model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    model_b_k = deltaE * part_k.exposure * p.B
+    model_b_k = deltaE * part_k.exposure * p[b_name]
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -37,9 +38,9 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 """
 
     ll_value = 0
-    
+    b_name = part_k.bkg_name
     model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    model_b_k = deltaE * part_k.exposure * p.B
+    model_b_k = deltaE * part_k.exposure * p[b_name]
     model_tot_k = model_b_k + model_s_k
     
     # constrain λ not to be negative
@@ -117,6 +118,12 @@ Parameters
     
     if config["signal"]["prior"] == "uniform"
         distrS = 0..uppS
+    elseif config["signal"]["prior"]=="loguniform"
+        distrS=LogUniform(0.01,uppS)
+       
+    else
+        @error "distibution", config["signal"]["prior"], " is not yet defined"
+        exit(-1)
     end
     if config["bkg"]["prior"] == "uniform"
         distrB = 0..uppB
@@ -137,6 +144,17 @@ Parameters
     - config: the Dict of the fit config
     - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
 """
+
+
+    list_names = partitions.bkg_name
+    unique_list=unique(list_names)
+
+    bkg_par_names=[Symbol(name) for name in unique_list]
+
+     
+    distrS, distrB = get_signal_bkg_priors(config)
+    distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
+
     res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
     bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
 
@@ -149,24 +167,42 @@ Parameters
         end
     end
     if (stat_only==false)
+        
         # get the minimum for α not to have negative values later on
         all_eff_tot = partitions.eff_tot
         all_eff_tot_sigma = partitions.eff_tot_sigma
         ratio = - all_eff_tot ./ all_eff_tot_sigma 
         α_min = maximum(ratio)
+       
+
+        # make some nice names for plotting
+        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
+                           :α=>L"\alpha",
+                           :σ=>[],
+                           :𝛥=>[])
         
-        distrS, distrB = get_signal_bkg_priors(config)
-        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),:B=>"B [cts/keV/kg/yr]",:α=>L"\alpha",:σ=>[],:𝛥=>[])
+        
         for (idx,r) in enumerate(res)
             append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" - "*string(idx)*" [keV]"])
             append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*string(idx)*" [keV]"])
         end
+
+        for key in keys(distrB_multi)
+            pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
+        end
         
-        return distprod(S=distrS,B=distrB, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+        return distprod(S=distrS, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias;distrB_multi...),pretty_names
         
     
     else 
-        distprod(S=0..config["signal"]["upper_bound"],B=0..config["bkg"]["upper_bound"]),
+
+        # simpler for a stat only fit
+        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"))
+        for key in keys(distrB_multi)
+            append!(pretty_names[key],[string(key)*" [cts/keV/kg/yr]"])
+        end
+
+        distprod(S=distS;distrB_multi...),
         Dict(:S=>L"S [10^{-27} \text{yr^{-1}}]",:B=>"B [cts/keV/kg/yr]")
 
     end
