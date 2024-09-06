@@ -191,7 +191,7 @@ Parameters
             pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
         end
         
-        return distprod(S=distrS, α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias;distrB_multi...),pretty_names
+        return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
         
     
     else 
