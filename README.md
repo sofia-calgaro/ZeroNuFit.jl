@@ -59,7 +59,8 @@ An example is shown below.
 "fit_groups":{
                 "group_one":{
                             "range":[[1930,2099],[2109,2114],[2124,2190]],
-                            "model":"uniform"
+                            "model":"uniform",
+                            "bkg_name":"low_bkg"
                             }
 
 },
@@ -87,7 +88,8 @@ An example is shown below.
 }
             
 ```
-in future we will also add the possibility to customize further the fit. Currently it implements a fit to the energy spectrum with a uniform background which has the same rate for the partitions in each fit_group.
+in future we will also add the possibility to customize further the fit. Currently it implements a fit to the energy spectrum with a uniform background.
+They key `bkg_name` is used to set the name of the background parameter for this group, note that several groups can be fitted with the same background parameter, this enables quick modifcation of the fit.
 
 In addition, it is neccesary to provide an 'event' file describing the events observed in the data, the path to this file is specified by the 'events' key in the config. Again this is a JSON file consisting of a list of observed events of the form.
  
@@ -99,7 +101,7 @@ In addition, it is neccesary to provide an 'event' file describing the events ob
         },
 ```
 The timestamp and detector are used to extract which partition this event corresponds to.
-To convert to this format from the standard GERDA and LEGEND files (Majorana demonstrator will be added soon), there is a notebook called `make_configs.ipynb' containing the neccesary functions.
+To convert to this format from the standard GERDA and LEGEND files , there is a notebook called `make_configs.ipynb' containing the neccesary functions.
 
 It is possible to supply a list of partition and event files in this case the list of fit groups and events are concatenated.
 
