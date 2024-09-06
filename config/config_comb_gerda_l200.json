@@ -6,10 +6,14 @@
     "overwrite":true,
 
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
-    "plot": {"fit_and_data": false, "bandfit_and_data": false},
-
-    "signal": {"upper_bound":10, "prior": "uniform"},
-    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
+    "plot": {
+            "fit_and_data": true,
+            "bandfit_and_data": false,
+            "scheme":"blue",
+            "alpha":0.3
+        },
+    "signal": {"upper_bound":100, "prior": "uniform"},
+    "bkg": {"upper_bound":3e-3, "prior": "uniform"},
     "stat_only":false
 }
 
