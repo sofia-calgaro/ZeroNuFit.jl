@@ -16,7 +16,7 @@
                 ]
             ],
             "model": "uniform",
-            "bkg_name":"L200_all"
+            "bkg_name":"B_l200_all"
         }
     },
     "partitions": {
