@@ -142,3 +142,17 @@ end
 
 
 
+
+struct LogFlat <: ContinuousUnivariateDistribution
+        a::Float64
+        b::Float64
+    end
+
+Distributions.support(::LogFlat) = (0.0, Inf)
+Distributions.pdf(d::LogFlat, x) = (x > d.a) && (x<d.b) ? 1/(x*(log(d.b)-log(d.a))) : 0
+Distributions.rand(d::LogFlat) = exp(rand()*(log(d.b)-log(d.a))+log(d.a))
+Distributions.logpdf(d::LogFlat, x::Float64) = x > d.a && x<d.b ? -log(x)-log(log(d.b)-log(d.a)) : -Inf
+Distributions.cdf(d::LogFlat, x::Float64) =  x < d.a ? 0 : x<d.b ? (log(x)-log(d.a))/(log(d.b)-log(d.a)) : 1
+Distributions.params(d::LogFlat) = (d.a,d.b)
+
+    

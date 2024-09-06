@@ -15,7 +15,8 @@
                     2190
                 ]
             ],
-            "model": "uniform"
+            "model": "uniform",
+            "bkg_name":"B_gerda_all_pII"
         }
     },
     "partitions": {

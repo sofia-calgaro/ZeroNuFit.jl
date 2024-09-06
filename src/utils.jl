@@ -31,6 +31,7 @@ function get_partitions_new(part_path::String)
 
         end
         arrays["fit_group"]=[]
+        arrays["bkg_par_name"]=[]
 
         for fit_group in keys(part_data_json["partitions"])
             
@@ -39,6 +40,7 @@ function get_partitions_new(part_path::String)
                     append!(arrays[key],[part[key]])
                     end
                 append!(arrays["fit_group"],[fit_group])
+                append!(arrays["bkg_par_name"],[Symbol(part_data_json["fit_groups"][fit_group]["bkg_name"])])
         
             end
 
@@ -46,6 +48,7 @@ function get_partitions_new(part_path::String)
         #TODO: find a way to make this not hardcoded
         tab = Table(experiment=Array(arrays["experiment"]),
                     fit_group=Array(arrays["fit_group"]),
+                    bkg_name = Array(arrays["bkg_par_name"]),
                     detector=Array(arrays["detector"]),
                     start_ts=Array(arrays["start_ts"]),
                     end_ts=Array(arrays["end_ts"]),
@@ -199,7 +202,7 @@ Function to plot and save results, as well as inputs
     @info "...done!"
     
     @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names)
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"])
 
     @info "...done!"
     

@@ -16,7 +16,7 @@
                 ]
             ],
             "model": "uniform",
-            "bkg_name": "mjd-DS0"
+            "bkg_name": "B_mjd-DS0"
         },
         "mjd-mod1": {
             "range": [
@@ -34,7 +34,7 @@
                 ]
             ],
             "model": "uniform",
-            "bkg_name": "mjd-mod1"
+            "bkg_name": "B_mjd-mod1"
         },
         "mjd-mod2": {
             "range": [
@@ -52,7 +52,7 @@
                 ]
             ],
             "model": "uniform",
-            "bkg_name": "mjd-mod2"
+            "bkg_name": "B_mjd-mod2"
         }
     },
     "partitions": {
