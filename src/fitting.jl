@@ -56,7 +56,16 @@ FUnction to run the fit looping over partitions
 """
     prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "built prior"
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only)
+
+    if (config["signal"]["prior"]=="sqrt")
+
+        sqrt_prior=true
+        s_max = config["signal"]["upper_bound"]
+    else
+        sqrt_prior=false
+        s_max=nothing
+    end
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only,sqrt_prior=sqrt_prior,s_max=s_max)
     @info "built likelihood"
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
