@@ -157,7 +157,7 @@ end
 
 
 
-function plot_marginal_distr(partitions,samples,pars,output;priors=nothing,par_names=nothing,plot_config=nothing)    
+function plot_marginal_distr(partitions,samples,pars,output;sqrt_prior=false,priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -218,7 +218,11 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
             # plot prior
             if priors!=nothing
-                y=pdf(priors[par],x)
+                if (par==:S && sqrt_prior)
+                    y= 1 ./(2*sqrt(s_max)*x) 
+                else
+                    y=pdf(priors[par],x)
+                end
                 plot!(x,y,label="prior",color="black")
             end
 
