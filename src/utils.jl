@@ -10,6 +10,7 @@ using PropDicts
 using Tables
 using TypedTables
 using LegendDataManagement
+using Optim
 using FileIO
 import JLD2
 import HDF5
@@ -129,19 +130,18 @@ Function which saves sampling results
 end
 
 
-function save_results_into_json(samples,config,output)
+function save_results_into_json(samples,posterior,config,output)
 """
 Function which saves results from the fit and copies the input config (for any future need)
 """
     
-    global_modes = BAT.mode(samples) # quick estimate
-    ##a more refined estimate would be the following 
-    #using Optim
-    #findmode_result = bat_findmode(
-    #    samples,
-    #    OptimAlg(optalg = Optim.NelderMead(), init = ExplicitInit([global_modes]))
-    #)
-    #fit_par_values = findmode_result.result
+    global_modes = BAT.mode(samples) 
+    # a more refined estimate would be the following 
+    findmode_result = bat_findmode(
+        posterior,
+        OptimAlg(optalg = Optim.NelderMead(), init = ExplicitInit([global_modes]))
+    )
+    refined_global_modes = findmode_result.result
     
     ltmp = NullLogger()
     marginalized_modes=0
@@ -163,6 +163,7 @@ Function which saves results from the fit and copies the input config (for any f
         "mean" => mean,
         "stddev" => stddev,
         "global_modes" => global_modes,
+        "refined_global_modes" => refined_global_modes,
         "marginalized_modes" => marginalized_modes,
         "ci_68" => ci_68,
         "ci_90" => ci_90,
@@ -180,7 +181,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, events, part_event_index, samples, config;priors=nothing,par_names=nothing)
+function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -198,7 +199,7 @@ Function to plot and save results, as well as inputs
     end
     
     @info "... now we save other useful results + config entries"
-    save_results_into_json(samples, config, output_path)
+    save_results_into_json(samples, posterior, config, output_path)
     @info "...done!"
     
     @info "... now we plot marginalized posteriors (and priors)"
