@@ -50,9 +50,9 @@ end
 ##############################################
 ##############################################
 ##############################################
-function run_fit_over_partitions(partitions,events,part_event_index;config,stat_only)
+function get_stat_blocks(partitions,events,part_event_index;config,stat_only)
 """
-FUnction to run the fit looping over partitions
+Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
     prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "built prior"
@@ -60,15 +60,20 @@ FUnction to run the fit looping over partitions
     @info "built likelihood"
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
+    return prior,likelihood,posterior
+end
+
+function run_fit_over_partitions(partitions,events,part_event_index;config,stat_only)
+"""
+FUnction to run the fit looping over partitions
+"""
+    prior,likelihood,posterior = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=stat_only)
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])
     return bat_sample(posterior, MCMCSampling(mcalg = MetropolisHastings(), nsteps = Ns, nchains = Nc)).result,prior,par_names
 end
-
-
-
-
+    
 
 ##############################################
 ##############################################
