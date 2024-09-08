@@ -31,6 +31,11 @@ Function to calculate the partial likelihood for a partition with 0 events
     return ll_value
 end
 
+function concat_sym(s1,s2,s3,s4)
+
+    return Symbol(string(s1)*string(s2)*string(s3)*string(s4))
+end
+
 function build_likelihood_per_partition(idx_k, idx_part_with_events,part_k, events_k, p;stat_only=false)
 """
 Function which computes the partial likelihood for a single data partiton
@@ -60,7 +65,8 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
             if (stat_only==true)
                 term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
             else
-                term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
+                term2 = model_s_k * pdf(Normal(Qbb + p[concat_sym(:𝛥_,part_k.part_name,:_,part_k.detector)], 
+                p[concat_sym(:σ_,part_k.part_name,:_,part_k.detector)]), evt_energy)
             end
             ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
@@ -163,15 +169,14 @@ Parameters
     distrS, distrB = get_signal_bkg_priors(config)
     distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
 
-    res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-    bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
-
+    res=Dict()
+    bias=Dict()
     for (idx,part) in enumerate(partitions)
         
         if (part_event_index[idx]!=0)
             i_new = part_event_index[idx]
-            res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-            bias[i_new] =Normal(part.bias,part.bias_sigma)
+            res[Symbol("σ_"*part.part_name*"_"*part.detector)]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+            bias[Symbol("𝛥_"*part.part_name*"_"*part.detector)]=Normal(part.bias,part.bias_sigma)
         end
     end
     
@@ -191,16 +196,22 @@ Parameters
                            :𝛥=>[])
         
         
-        for (idx,r) in enumerate(res)
-            append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" - "*string(idx)*" [keV]"])
-            append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*string(idx)*" [keV]"])
+        #for (idx,r) in enumerate(res)
+        for key in keys(res)
+            pretty_names[key]= "Energy Resolution "*L"(\sigma)"*" - "*string(key)*" [keV]"
+            pretty_names[key]="Energy Scale Bias "*L"(\Delta)"*" - "*string(key)*" [keV]"
         end
 
         for key in keys(distrB_multi)
             pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
         end
         
-        return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+        prior =distprod(S=distrS,;distrB_multi...,res...,bias..., α=Truncated(Normal(0,1),α_min,Inf))
+
+        for par in keys(prior)
+            @info "adding par", par, " with prior", prior[par]
+        end
+        return distprod(S=distrS,;distrB_multi...,res...,bias..., α=Truncated(Normal(0,1),α_min,Inf)),pretty_names
         
     
     else 
