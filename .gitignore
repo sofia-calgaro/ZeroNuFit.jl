@@ -10,3 +10,7 @@ output/*
 *.pdf
 *.h5
 data/*
+config/partitions*.json
+config/events*.json
+config/events*.json
+make_configs.ipynb
