@@ -149,13 +149,59 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
     
 end
 
+##############################################
+##############################################
+##############################################
+
+function plot_correlation_matrix(samples,output;par_names=nothing)
+"""
+Plots the correlation matrixs
+"""
+    unshaped_samples, f_flatten = bat_transform(Vector, samples)
+    covariance_matrix = cov(unshaped_samples)
+    var = std(unshaped_samples)
+
+    corr =  100*sqrt(covariance_matrix ./ (var .* var'))
+    heatmap(corr,  xlabel="Parameter Index", ylabel="Parameter Index", color=:diverging_bwr_40_95_c42_n256,clim=(-100,100),ctitle="Correlation Coefficient")
+    savefig(joinpath(output,"plots/correlations.pdf"))
+end
+
+function plot_two_dim_posteriors(samples,pars,output;par_names=nothing)
+    first_sample = samples.v[1]
+
+    for par_x in pars
+        par_entry = first_sample[par_x]
+        
+        if length(par_entry) != 1
+            continue
+        end
+        for par_y in pars
+            if (par_x==par_y)
+                continue
+            end
+            par_entry = first_sample[par_y]
+            if length(par_entry) != 1
+                continue
+            end
+            
+            x = get_par_posterior(samples,par_x,idx=nothing)
+            y = get_par_posterior(samples,par_y,idx=nothing)
+
+            p=histogram2d(x, y, bins=200, cmap=:batlow, xlabel=par_names[par_x], ylabel=par_names[par_y],
+            right_margin = 10Plots.mm)
+            savefig(p,"temp.pdf")
+
+            append_pdf!(joinpath(output, "plots/2D_posterior.pdf"), "temp.pdf", cleanup=true)
+        end
+    end
+
+
+end
 
 
 ##############################################
 ##############################################
 ##############################################
-
-
 
 function plot_marginal_distr(partitions,samples,pars,output;sqrt_prior=false,priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing)    
 """
