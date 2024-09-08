@@ -76,7 +76,9 @@ Parameters:
     
     @info bat_report(samples)
     
-    save_outputs(partitions, events, part_event_index, samples, config,priors=prior,par_names=par_names)
+    _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+    
+    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names)
     
     return 
 end
