@@ -187,6 +187,13 @@ Function to plot and save results, as well as inputs
 """
     output_path = config["output_path"]
     
+    if (config["signal"]["prior"]=="sqrt")
+        sqrt_prior=true
+        s_max=config["signal"]["upper_bound"]
+    else
+        sqrt_prior=false
+        s_max=nothing
+    end
     first_sample = samples.v[1]
     free_pars = keys(first_sample) # in format (:B, :S, ...) 
     @info "... these are the parameters that were included: ", free_pars
@@ -203,7 +210,8 @@ Function to plot and save results, as well as inputs
     @info "...done!"
     
     @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"])
+    plot_marginal_distr(partitions, samples, free_pars, output_path,
+    priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior)
 
     @info "...done!"
     

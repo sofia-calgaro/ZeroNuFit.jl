@@ -71,7 +71,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
-function build_likelihood_looping_partitions(partitions, events,part_event_index;stat_only=false)
+function build_likelihood_looping_partitions(partitions, events,part_event_index;stat_only=false,sqrt_prior=false,s_max=nothing)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -97,6 +97,13 @@ Returns:
                     total_ll += build_likelihood_zero_obs_evts(part_k, p)
                 end
             end
+            
+            ## trick to include the prior 
+            if (sqrt_prior)
+                total_ll+=-log(2)-0.5*log(s_max)-0.5*log(p.S+eps(p.S))
+            end
+
+
             return total_ll
         end
     )
@@ -116,11 +123,12 @@ Parameters
     uppS = config["signal"]["upper_bound"]
     uppB = config["bkg"]["upper_bound"]
     
-    if config["signal"]["prior"] == "uniform"
+    if config["signal"]["prior"] == "uniform" ||
+        config["signal"]["prior"]=="sqrt"
         distrS = 0..uppS
     elseif config["signal"]["prior"]=="loguniform"
         distrS=LogUniform(0.01,uppS)
-       
+    
     else
         @error "distibution", config["signal"]["prior"], " is not yet defined"
         exit(-1)
