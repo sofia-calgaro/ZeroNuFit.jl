@@ -240,14 +240,18 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 if (par_names !=nothing)
                     xname = par_names[par][idx]
                 end
+
                 p=plot(
                 unshaped_samples, ct,
                 mean = false, std = false, globalmode = true, marginalmode = true,
                 nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post)),colors=color_scheme,alpha=alpha,
                 linecolor=:black
                 )
+                mini=minimum(post)
+                x=range(mini, stop=maximum(post), length=1000)
 
                 if priors!=nothing
+                    
                     y=pdf(priors[par].v[idx],x)
                     plot!(x,y,label="prior",color="black")
                 end
