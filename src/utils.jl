@@ -209,10 +209,16 @@ Function to plot and save results, as well as inputs
     @info "... now we save other useful results + config entries"
     save_results_into_json(samples, posterior, config, output_path)
     @info "...done!"
-    
+
+    plot_correlation_matrix(samples,output_path,par_names=par_names)
+
     @info "... now we plot marginalized posteriors (and priors)"
     plot_marginal_distr(partitions, samples, free_pars, output_path,
     priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior)
+
+    @info "plot 2D posterior for some cases"
+    plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names)
+
 
     @info "...done!"
     
