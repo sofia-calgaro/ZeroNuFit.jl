@@ -173,14 +173,14 @@ Parameters
         :𝛥=>[])
 
         res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-        bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
+        bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
 
         for (idx,part) in enumerate(partitions)
             
             if (part_event_index[idx]!=0)
                 i_new = part_event_index[idx]
                 res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-                bias[i_new] =Normal(part.bias,part.bias_sigma)
+                bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
                 long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
                 append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
                 append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
