@@ -60,6 +60,7 @@
             {
                 "experiment": "MJD",
                 "detector": "ppc1",
+                "part_name": "first-ds",
                 "start_ts": 1000,
                 "end_ts": 1050,
                 "eff_tot": 0.611054,
@@ -75,6 +76,7 @@
             {
                 "experiment": "MJD",
                 "detector": "ppc1",
+                "part_name": "other-ds",
                 "start_ts": 1100,
                 "end_ts": 1150,
                 "eff_tot": 0.62,
@@ -90,6 +92,7 @@
             {
                 "experiment": "MJD",
                 "detector": "ppc2",
+                "part_name": "other-ds",
                 "start_ts": 1100,
                 "end_ts": 1150,
                 "eff_tot": 0.62,
@@ -103,6 +106,7 @@
             {
                 "experiment": "MJD",
                 "detector": "icpc",
+                "part_name": "other-ds",
                 "start_ts": 1100,
                 "end_ts": 1150,
                 "eff_tot": 0.592331,

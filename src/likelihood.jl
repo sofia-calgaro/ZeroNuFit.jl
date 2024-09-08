@@ -163,20 +163,30 @@ Parameters
     distrS, distrB = get_signal_bkg_priors(config)
     distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
 
-    res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-    bias=Vector{Normal{Float64}}(undef,maximum(part_event_index))
-
-    for (idx,part) in enumerate(partitions)
-        
-        if (part_event_index[idx]!=0)
-            i_new = part_event_index[idx]
-            res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-            bias[i_new] =Normal(part.bias,part.bias_sigma)
-        end
-    end
+    
     
     if (stat_only==false)
         
+        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
+        :α=>L"\alpha",
+        :σ=>[],
+        :𝛥=>[])
+
+        res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+        bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+
+        for (idx,part) in enumerate(partitions)
+            
+            if (part_event_index[idx]!=0)
+                i_new = part_event_index[idx]
+                res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+                bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
+                long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
+                append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
+                append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
+    
+            end
+        end
         # get the minimum for α not to have negative values later on
         all_eff_tot = partitions.eff_tot
         all_eff_tot_sigma = partitions.eff_tot_sigma
@@ -185,16 +195,8 @@ Parameters
        
 
         # make some nice names for plotting
-        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
-                           :α=>L"\alpha",
-                           :σ=>[],
-                           :𝛥=>[])
-        
-        
-        for (idx,r) in enumerate(res)
-            append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" - "*string(idx)*" [keV]"])
-            append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*string(idx)*" [keV]"])
-        end
+       
+       
 
         for key in keys(distrB_multi)
             pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
