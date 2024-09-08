@@ -51,7 +51,6 @@ function get_partitions_new(part_path::String)
                     fit_group=Array(arrays["fit_group"]),
                     bkg_name = Array(arrays["bkg_par_name"]),
                     detector=Array(arrays["detector"]),
-                    part_name =Array(arrays["part_name"]),
                     start_ts=Array(arrays["start_ts"]),
                     end_ts=Array(arrays["end_ts"]),
                     eff_tot=Array(arrays["eff_tot"]),
