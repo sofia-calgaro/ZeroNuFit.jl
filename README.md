@@ -101,7 +101,7 @@ In addition, it is neccesary to provide an 'event' file describing the events ob
         },
 ```
 The timestamp and detector are used to extract which partition this event corresponds to.
-To convert to this format from the standard GERDA and LEGEND files , there is a notebook called `make_configs.ipynb' containing the neccesary functions.
+To convert to this format from the standard GERDA and LEGEND files, there are tools available in https://github.com/tdixon97/legend-0vbb-config.
 
 It is possible to supply a list of partition and event files in this case the list of fit groups and events are concatenated.
 
