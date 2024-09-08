@@ -10,9 +10,9 @@ using ColorSchemes
 default(
     framestyle=:box,               # Grid line transparency
     background_color = :white   ,       # Background color of the plot,
-    titlefontsize=12,     # Global title font size
-    guidefontsize=12,     # Global axis label font size
-    tickfontsize=12,      # Global tick label font size
+    titlefontsize=10,     # Global title font size
+    guidefontsize=10,     # Global axis label font size
+    tickfontsize=10,      # Global tick label font size
     legendfontsize=8     # Global legend font size
 )
 # define some constants -TODO add to config
@@ -246,6 +246,12 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 nbins = 200, xlabel = xlab, ylabel = ylab, xlim=(minimum(post),maximum(post)),colors=color_scheme,alpha=alpha,
                 linecolor=:black
                 )
+
+                if priors!=nothing
+                    y=pdf(priors[par].v[idx],x)
+                    plot!(x,y,label="prior",color="black")
+                end
+
                 xaxis!(xname)
                 ylims!(0,ylims()[2])
                 savefig(p,"temp.pdf")
