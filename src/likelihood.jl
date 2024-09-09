@@ -201,6 +201,9 @@ Parameters
             pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
         end
         
+        
+
+
         return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
         
     
@@ -219,3 +222,100 @@ Parameters
     
 end
 
+
+##############################################
+##############################################
+##############################################
+function build_hd_prior(partitions,part_event_index;config,stat_only=false)
+    """
+    [experimental ] builds the priors for use in the fit with a Hierachical structure
+    ----------
+    Parameters
+        - partitions:Table of the partition info
+        - config: the Dict of the fit config
+        - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
+    """
+    
+    
+        list_names = partitions.bkg_name
+        unique_list=unique(list_names)
+    
+        bkg_par_names=[Symbol(name) for name in unique_list]
+    
+         
+        distrS, distrB = get_signal_bkg_priors(config)
+        distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
+    
+        
+        
+        if (stat_only==false)
+            
+            pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
+            :α=>L"\alpha",
+            :σ=>[],
+            :𝛥=>[])
+    
+            res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+            bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+    
+            for (idx,part) in enumerate(partitions)
+                
+                if (part_event_index[idx]!=0)
+                    i_new = part_event_index[idx]
+                    res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+                    bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
+                    long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
+                    append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
+                    append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
+        
+                end
+            end
+            # get the minimum for α not to have negative values later on
+            all_eff_tot = partitions.eff_tot
+            all_eff_tot_sigma = partitions.eff_tot_sigma
+            ratio = - all_eff_tot ./ all_eff_tot_sigma 
+            α_min = maximum(ratio)
+           
+    
+            # make some nice names for plotting
+           
+           
+    
+            for key in keys(distrB_multi)
+                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
+            end
+            
+            dis_B = distprod
+            hd = BAT.HierarchicalDistribution(
+                    v -> begin 
+                    dict = (; (key =>LogNormal(v.B,v.σB) for key in keys(distrB_multi))...)
+                    BAT.NamedTupleDist(;dict...)
+                    end,
+                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=distrB
+                    , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
+                    )
+            )          
+            pretty_names[:B]="B [cts/keV/kg/yr]"
+            pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
+
+    
+            return hd,pretty_names
+            
+        
+        else 
+    
+            # simpler for a stat only fit
+            pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"))
+            for key in keys(distrB_multi)
+                append!(pretty_names[key],[string(key)*" [cts/keV/kg/yr]"])
+            end
+            pretty_names[:B]="B [cts/keV/kg/yr]"
+            pretty_names[σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
+            distprod(S=distS;distrB_multi...),
+            Dict(:S=>L"S [10^{-27} \text{yr^{-1}}]",:B=>"B [cts/keV/kg/yr]")
+    
+        end
+        
+    end
+    
+    

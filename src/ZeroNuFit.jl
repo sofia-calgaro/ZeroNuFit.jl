@@ -70,8 +70,8 @@ Parameters:
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
-        prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=config["stat_only"])
-
+        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+        
     end
     
     @info bat_report(samples)

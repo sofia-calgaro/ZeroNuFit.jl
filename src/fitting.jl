@@ -54,7 +54,7 @@ function get_stat_blocks(partitions,events,part_event_index;config,stat_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
-    prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
+    prior,par_names=build_hd_prior(partitions,part_event_index,config=config,stat_only=stat_only)
     @info "built prior"
 
     if (config["signal"]["prior"]=="sqrt")
