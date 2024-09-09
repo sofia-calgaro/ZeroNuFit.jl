@@ -182,7 +182,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing)
+function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing,hier=false)
 """
 Function to plot and save results, as well as inputs
 """
@@ -214,7 +214,7 @@ Function to plot and save results, as well as inputs
 
     @info "... now we plot marginalized posteriors (and priors)"
     plot_marginal_distr(partitions, samples, free_pars, output_path,
-    priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior)
+    priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier)
 
     @info "plot 2D posterior for some cases"
     plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names)
