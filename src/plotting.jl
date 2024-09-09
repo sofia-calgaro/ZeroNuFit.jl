@@ -203,7 +203,8 @@ end
 ##############################################
 ##############################################
 
-function plot_marginal_distr(partitions,samples,pars,output;sqrt_prior=false,priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing)    
+function plot_marginal_distr(partitions,samples,pars,output;sqrt_prior=false,
+    priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing,hier=false)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -267,9 +268,29 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 if (par==:S && sqrt_prior)
                     y= 1 ./(2*sqrt(s_max)*x) 
                 else
-                    #y=pdf(priors[par],x)
+                    color="black"
+                    if (hier==false)
+                        y=pdf(priors[par],x)
+                        plot!(x,y,label="prior",color="black")
+
+                    elseif (haskey(priors.pdist,par))
+
+                        y=pdf(priors.pdist[par],x)
+                        plot!(x,y,label="prior",color="black")
+
+                    else
+                        for i in 1:50
+                            rando=rand(priors.pdist)
+                            rando = samples.v[i]
+                            y=pdf(priors.f(rando)[par],x)
+                            color="grey"
+                            
+                            plot!(x,y,color="grey",alpha=0.3,label=nothing)
+
+                        end
+                    end
                 end
-                #plot!(x,y,label="prior",color="black")
+                
             end
 
             savefig(p,"temp.pdf")
@@ -298,8 +319,12 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 if priors!=nothing
                     
-                    #y=pdf(priors[par].v[idx],x)
-                    #plot!(x,y,label="prior",color="black")
+                    if (hier==true)
+                        y=pdf(priors.pdist[par].v[idx],x)
+                    else                       
+                        y=pdf(priors[par].v[idx],x)
+                    end
+                    plot!(x,y,label="prior",color="black")
                 end
 
                 xaxis!(xname)
