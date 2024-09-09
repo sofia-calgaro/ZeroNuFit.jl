@@ -267,9 +267,9 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 if (par==:S && sqrt_prior)
                     y= 1 ./(2*sqrt(s_max)*x) 
                 else
-                    y=pdf(priors[par],x)
+                    #y=pdf(priors[par],x)
                 end
-                plot!(x,y,label="prior",color="black")
+                #plot!(x,y,label="prior",color="black")
             end
 
             savefig(p,"temp.pdf")
@@ -298,8 +298,8 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 if priors!=nothing
                     
-                    y=pdf(priors[par].v[idx],x)
-                    plot!(x,y,label="prior",color="black")
+                    #y=pdf(priors[par].v[idx],x)
+                    #plot!(x,y,label="prior",color="black")
                 end
 
                 xaxis!(xname)
