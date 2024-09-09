@@ -1,13 +1,13 @@
 {
     "debug":false,
-    "partitions":["config/partitions_l200.json"],
-    "events":    ["config/events_l200.json"],
+    "partitions":["../legend-0vbb-config/partitions_l200.json"],
+    "events":    ["../legend-0vbb-config/events_l200.json"],
     "output_path": "output/fit_l200/",
     "overwrite":true,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "plot": {"fit_and_data": false, "bandfit_and_data": false},
-    "signal": {"upper_bound":1e-25, "prior": "uniform"},
-    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
+    "signal": {"upper_bound":1000, "prior": "uniform"},
+    "bkg": {"upper_bound":0.1, "prior": "uniform","correlated":true},
     "stat_only":false
 }
 
