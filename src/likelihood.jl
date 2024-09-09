@@ -8,7 +8,7 @@ using Cuba
 # define some constants -TODO add to config
 Qbb = 2039.06 # keV
 N_A = 6.022E23
-m_76 = 75.6E-3 # kg/mol
+m_76 = 75.92E-3 # kg/mol
 deltaE = 240 # keV
 sig_units =1e-27 # signal is in units of this
 
