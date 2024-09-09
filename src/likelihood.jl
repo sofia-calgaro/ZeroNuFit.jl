@@ -288,10 +288,10 @@ function build_hd_prior(partitions,part_event_index;config,stat_only=false)
             dis_B = distprod
             hd = BAT.HierarchicalDistribution(
                     v -> begin 
-                    dict = (; (key =>Normal(v.B,v.σB) for key in keys(distrB_multi))...)
+                    dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
                     BAT.NamedTupleDist(;dict...)
                     end,
-                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=distrB
+                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
                     , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
                     )
             )          
