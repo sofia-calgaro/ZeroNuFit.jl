@@ -79,7 +79,7 @@ Parameters:
     _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
     
     hier = config["bkg"]["correlated"]
-    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names,hier=true)
+    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names,hier=hier)
     
     return 
 end
