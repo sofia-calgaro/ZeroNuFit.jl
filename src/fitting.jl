@@ -54,6 +54,11 @@ function get_stat_blocks(partitions,events,part_event_index;config,stat_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
+    # check if the key 'correlated' exists
+    if !haskey(config["bkg"], "correlated")
+        throw(ArgumentError("Key 'correlated' not found for the background parameter in the configuration JSON! Exit here"))
+    end
+    
     corr= config["bkg"]["correlated"]
     if (corr==true)
         prior,par_names=build_hd_prior(partitions,part_event_index,config=config,stat_only=stat_only)
