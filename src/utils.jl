@@ -182,7 +182,7 @@ Function which saves results from the fit and copies the input config (for any f
 
 end
 
-function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing,hier=false)
+function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing)
 """
 Function to plot and save results, as well as inputs
 """
