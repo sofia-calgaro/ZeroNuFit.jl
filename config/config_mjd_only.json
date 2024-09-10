@@ -2,17 +2,17 @@
     "debug":false,
     "partitions":["config/partitions_mjd_new.json"],
     "events":    ["config/events_mjd_new_part.json"],
-    "output_path": "output/fit_mjd/",
+    "output_path": "output/fit_mjd_v2/",
     "overwrite":true,
-    "bat_fit": {"nsteps": 1e5, "nchains": 4},
+    "bat_fit": {"nsteps": 1e6, "nchains": 6},
     "plot": {
-            "fit_and_data": true,
+            "fit_and_data": false,
             "bandfit_and_data": false,
             "scheme":"purple",
             "alpha":0.3
         },
-    "signal": {"upper_bound":20, "prior": "uniform"},
-    "bkg": {"upper_bound":2e-2, "prior": "uniform"},
+    "signal": {"upper_bound":1000, "prior": "uniform"},
+    "bkg": {"upper_bound":0.1, "prior": "uniform"},
     "stat_only":false
 }
 
