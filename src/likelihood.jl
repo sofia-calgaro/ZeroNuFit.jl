@@ -303,17 +303,7 @@ function build_hd_prior(partitions,part_event_index;config,stat_only=false)
             
         
         else 
-    
-            # simpler for a stat only fit
-            pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"))
-            for key in keys(distrB_multi)
-                append!(pretty_names[key],[string(key)*" [cts/keV/kg/yr]"])
-            end
-            pretty_names[:B]="B [cts/keV/kg/yr]"
-            pretty_names[σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
-            distprod(S=distS;distrB_multi...),
-            Dict(:S=>L"S [10^{-27} \text{yr^{-1}}]",:B=>"B [cts/keV/kg/yr]")
-    
+             throw(ArgumentError("There is no hierarchical implementation for 'stat_only'=true. Fix your config. Exit here"))
         end
         
     end
