@@ -1,0 +1,14 @@
+{
+    "debug":false,
+    "partitions":["../legend-0vbb-config/partitions_l200_by_type.json"],
+    "events":    ["../legend-0vbb-config/events_l200.json"],
+    "output_path": "output/fit_l200_correlated/",
+    "overwrite":true,
+    "bat_fit": {"nsteps": 1e5, "nchains": 4},
+    "plot": {"fit_and_data": false, "bandfit_and_data": false},
+    "signal": {"upper_bound":1000, "prior": "uniform"},
+    "bkg": {"upper_bound":0.1, "prior": "uniform","correlated":false},
+    "stat_only":false
+    
+}
+

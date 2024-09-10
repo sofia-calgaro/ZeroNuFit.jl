@@ -8,6 +8,11 @@ using JSON
 
 export run_analysis
 
+
+
+
+
+
 # function to run the unbinned fit
 function run_analysis(config::Dict{String, Any};output_path::String)
 """
@@ -20,6 +25,7 @@ Parameters:
 
     @info "You entered into src/ZeroNuFit.jl"
     
+
     @info"Let's retrieve some partitions ..."
     partitions = nothing
     first=true
@@ -70,17 +76,19 @@ Parameters:
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
-        prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=config["stat_only"])
-
+        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+        
     end
     
     @info bat_report(samples)
     
     _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
     
+   
     save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names)
     
     return 
+    
 end
 
 end 
