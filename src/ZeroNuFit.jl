@@ -8,6 +8,11 @@ using JSON
 
 export run_analysis
 
+
+
+
+
+
 # function to run the unbinned fit
 function run_analysis(config::Dict{String, Any};output_path::String)
 """
@@ -20,6 +25,7 @@ Parameters:
 
     @info "You entered into src/ZeroNuFit.jl"
     
+
     @info"Let's retrieve some partitions ..."
     partitions = nothing
     first=true
@@ -78,10 +84,11 @@ Parameters:
     
     _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
     
-    hier = config["bkg"]["correlated"]
-    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names,hier=hier)
+   
+    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names)
     
     return 
+    
 end
 
 end 

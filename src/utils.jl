@@ -187,7 +187,7 @@ function save_outputs(partitions, events, part_event_index, samples, posterior, 
 Function to plot and save results, as well as inputs
 """
     output_path = config["output_path"]
-    
+    hier = config["bkg"]["correlated"]
     if (config["signal"]["prior"]=="sqrt")
         sqrt_prior=true
         s_max=config["signal"]["upper_bound"]
