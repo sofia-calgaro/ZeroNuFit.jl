@@ -100,6 +100,7 @@ Returns:
             ## trick to include the prior 
             if (sqrt_prior)
                 total_ll+=-log(2)-0.5*log(s_max)-0.5*log(p.S+eps(p.S))
+                #println(p.S,pull)
             end
 
 
@@ -108,7 +109,56 @@ Returns:
     )
 end
 
+##############################################
+##############################################
+##############################################
+function generate_data(samples,partitions,part_event_index,
+    best_fit::Bool=false,stat_only=false,bkg_only=false,seed=nothing)
+"""
+Generates data from a posterior distribution.y
+This is based on the posterior predictive distributions. 
+Given a model with some parameters `ttheta_i`, the posterior predictive distribution,
+or the distribution of data generated accoridng to the posterior distribution of theta
+and the likelihood is:
+```math
+p(y|D) =int p(y|theta)p(theta|D)dtheta
+```
+Or in terms of sampling we first draw samples of `theta` from the posterior and then generate,
+datasets based on the likelihood.
+We also give the options to fix the posterior distribution to the best fit,
+which is equivalent to the standard sampling methods.
 
+Parameters
+----------
+    - samples::DensitySamplesVector the samples of a past fit
+    - partitions::Table of the partition info
+    - part_event_index: index for the parameters for partitions with events
+Keyword arguments
+-----------------
+    - best_fit::Bool where to fix the paramaters to the best fit
+    - stat_only::Bool whether only statistical parameters were included in the posterior
+    - bkg_only::Bool where the fit was without signal,
+    - seed::Int random seed
+Returns
+    Array of energies in each partition
+"""
+
+    # seed the seed
+    if (seed==nothing)
+        Random.seed!(round(10000*(rand())))
+    else
+        Random.seed!(seed)
+    end
+    println(rand)
+    
+    # create the array to fill
+    events=[]
+
+
+
+
+
+end
 ##############################################
 ##############################################
 ##############################################
@@ -303,9 +353,29 @@ function build_hd_prior(partitions,part_event_index;config,stat_only=false)
             
         
         else 
-             throw(ArgumentError("There is no hierarchical implementation for 'stat_only'=true. Fix your config. Exit here"))
+
+
+
+            for key in keys(distrB_multi)
+                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
+            end
+            
+            dis_B = distprod
+            hd = BAT.HierarchicalDistribution(
+                    v -> begin 
+                    dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                    BAT.NamedTupleDist(;dict...)
+                    end,
+                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
+                    )
+            )          
+            pretty_names[:B]="B [cts/keV/kg/yr]"
+            pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
+
+    
+            return hd,pretty_names
+
         end
         
     end
-    
     
