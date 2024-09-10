@@ -27,19 +27,38 @@ alternatively the code can be run within the Legend container, see https://githu
 ## Config file
 Before running the code, set the input config.json file with following entries:
 
-```bash
+```
 {
-    "debug":false, // true if you want to display debug output on terminal
-    "partitions":["config/partitions_gerda.json"], // include partitions inputs -> one entry per experiment
-    "events":    ["config/events_gerda.json"], // include events inputs -> one entry per experiment
-    "meta_path": "/global/cfs/cdirs/m2676/data/lngs/l200/public/prodenv/prod-blind/ref-v2.1.2/inputs", // path to metadata
-    "output_path": "output/test_fit/", // path for storing outputs (logs, plots, mcmc results)
-    "bat_fit": {"nsteps": 1e3, "nchains": 4}, // some settings for running the BAT fit
-    "upper_signal":1e-25, // upper bound for signal (free parameter)
-    "upper_bkg":1e-3, // upper bound for background (free parameter)
-    "stat_only":true // false if we use pull terms for additional nuisance parameters (res, bias, eff.)
+    "debug":false,
+    "partitions":["config/partitions_gerda_new.json","config/partitions_l200.json","config/partitions_mjd_new.json"],
+    "events":    ["config/events_gerda.json","config/events_l200.json","config/events_mjd_new_part.json"],
+    "output_path": "output/fit_mjd_l200_gerda_v2/",
+    "overwrite":true,
+    "bat_fit": {"nsteps": 1e6, "nchains": 6},
+    "plot": {
+            "fit_and_data": false,
+            "bandfit_and_data": false,
+            "scheme":"red",
+            "alpha":0.3
+        },
+    "signal": {"upper_bound":1000, "prior": "uniform"},
+    "bkg": {"upper_bound":0.1, "prior": "uniform", "correlated": true},
+    "stat_only":false
 }
 ```
+
+where
+- `"debug": true` if you want to display debug output on terminal
+- `"partitions"`: list of partitions JSON inputs; it takes one entry per experiment
+- `"events"`: list of events JSON inputs; it takes one entry per experiment
+- `"output_path"`: path where to store outputs (logs, plots, mcmc results)
+- `"overwrite": true` if you want to overwrite a previous fit with same `output_path`; if set to `false` but no fits were previously performed (ie there are no outputs to overwrite), the code will save the output of this fit
+- `"bat_fit"`: settings for the BAT fit
+- `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances
+- `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...)
+- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`)
+- `"stat_only":true` // false if we use pull terms for additional nuisance parameters (res, bias, eff.)
+
 
 ## Partition and events files
 The takes inputs in JSON format, two files are needed a "partitions file" giving information on the independent spectra to be used in the fit/likelihood, this is set by the "partitions" key in the config file. This provides all the information neccesary to define the fit model.

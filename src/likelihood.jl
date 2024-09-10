@@ -355,6 +355,7 @@ function build_hd_prior(partitions,part_event_index;config,stat_only=false)
         else 
 
 
+
             for key in keys(distrB_multi)
                 pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
             end
@@ -373,7 +374,7 @@ function build_hd_prior(partitions,part_event_index;config,stat_only=false)
 
     
             return hd,pretty_names
-    
+
         end
         
     end
