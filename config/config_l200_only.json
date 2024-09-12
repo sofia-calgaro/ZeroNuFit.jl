@@ -6,8 +6,8 @@
     "overwrite":true,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "plot": {"fit_and_data": false, "bandfit_and_data": false},
-    "signal": {"upper_bound":1000, "prior": "uniform"},
-    "bkg": {"upper_bound":0.1, "prior": "uniform","correlated":true},
+    "signal": {"upper_bound":1000, "prior": "sqrt"},
+    "bkg": {"upper_bound":0.1, "prior": "uniform","correlated":false},
     "stat_only":false
 }
 
