@@ -22,7 +22,6 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,index_part_with_events::Int
     if correlated_eff == true
         model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
     elseif (index_part_with_event!=0 ||  stat_only==true)
-        # we remove alpha and uncertainties
         model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
     else
         model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
@@ -105,7 +104,7 @@ Returns:
     return DensityInterface.logfuncdensity( function(p::NamedTuple)
             total_ll = 0.0
             
-            for (idx_k, part_k) in enumerate(partitions)
+             for (idx_k, part_k) in enumerate(partitions)
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
