@@ -21,11 +21,13 @@ function get_mu_s_b(p,part_k,index_part_with_events;correlated_eff=true,stat_onl
     model_s_k = 0
     if correlated_eff == true
         model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    elseif (index_part_with_event!=0 ||  stat_only==true)
-        # we remove alpha and uncertainties
-        model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
+    # we remove alpha and uncertainties
     else
-        model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
+        if (index_part_with_event!=0 || stat_only==false)
+            model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
+        else
+            model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
+        end
     end
     model_b_k = deltaE * part_k.exposure * p[b_name]
 
@@ -56,7 +58,6 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
     ll_value = 0
 
     model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
-
    
     model_tot_k = model_b_k + model_s_k
     
