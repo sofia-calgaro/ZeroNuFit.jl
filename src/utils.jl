@@ -65,7 +65,7 @@ function get_partitions_new(part_path::String)
         return tab,fit_groups
 end
 
-function get_partition_event_index(events,partitions)
+function get_partition_event_index(events::Array{Vector{Float64}},partitions::TypedTables.Table)::Vector{Int}
 """
 gets an object descirbing if a partiton has an event and giving them indexs
 This creates a vector where
@@ -86,18 +86,19 @@ events and corresponds to the index of the parameters.
             output[idx]=0
         end
     end
+    
     return output
 end
 
-function get_events(event_path,partitions)
+function get_events(event_path,partitions)::Array{Vector{Float64}}
     """
         Get the event info from a jason file and save  to a Table
     """
     
         event_json = JSON.parsefile(event_path,dicttype=DataStructures.OrderedDict)
-        events=[]
+        events=Array{Vector{Float64}}(undef,length(partitions))
         for (idx,part) in enumerate(partitions)
-            append!(events,[[]])
+            events[idx]=Vector{Float64}[]
         end
        
         for event in event_json["events"]
@@ -106,19 +107,39 @@ function get_events(event_path,partitions)
             for (idx,part) in enumerate(partitions)
                 if (part.experiment ==event["experiment"] && part.detector==event["detector"] && 
                     event["timestamp"]<part.end_ts+1 && event["timestamp"]>part.start_ts-1)
-
-                    append!(events[idx],event["energy"])
+                    append!(events[idx],Vector{Float64}([Float64(event["energy"])]))
                     found=true
                 end
                     
             end
+            
             if (found==false)
                 @error event "has no partition"
                 exit(-1)
             end
         end
+        
         return events
         
+end
+
+## sampling
+function inverse_uniform_cdf(p)
+    res = ifelse.(p .== 0, 1930,
+          ifelse.(p .< (169/240), p .* 240 .+ 1930,
+          ifelse.(p .< (169/240), 2099,
+          ifelse.(p .< (169 + 1/240), p .* 240 .+ 1940,
+          ifelse.(p .< (175/240), 2114,
+          ifelse.(p .< 1, p .* 240 .+ 1950, 2190))))))
+    
+    return res
+end
+function generate_disjoint_uniform_samples(n)
+    rands=[]
+    for i in 1:n
+        append!(rands,rand())
+    end
+    return inverse_uniform_cdf(rands)
 end
 
 
