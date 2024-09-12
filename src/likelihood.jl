@@ -12,6 +12,25 @@ m_76 = 75.92E-3 # kg/mol
 deltaE = 240 # keV
 sig_units =1e-27 # signal is in units of this
 
+function get_mu_s_b(p,part_k,index_part_with_events;correlated_eff=true,stat_only=false)
+    """
+    Get the expected number of signal and background counts in a partition
+    """
+    b_name = part_k.bkg_name
+
+    model_s_k = 0
+    if correlated_eff == true
+        model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
+    elseif (index_part_with_event!=0 ||  stat_only==true)
+        # we remove alpha and uncertainties
+        model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
+    else
+        model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
+    end
+    model_b_k = deltaE * part_k.exposure * p[b_name]
+
+    return model_s_k,model_b_k
+end
 
 function build_likelihood_zero_obs_evts(part_k, p;stat_only=false, correlated_eff=true)
 """
@@ -20,16 +39,7 @@ Function to calculate the partial likelihood for a partition with 0 events
 """
 
     ll_value = 0
-    b_name = part_k.bkg_name
-
-    model_s_k = 0
-    if correlated_eff == true
-        model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    else
-        # we remove alpha and uncertainties
-        model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
-    end
-    model_b_k = deltaE * part_k.exposure * p[b_name]
+    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,correlated_eff=correlated_eff,stat_only=stat_only)
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -44,16 +54,10 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 """
 
     ll_value = 0
-    b_name = part_k.bkg_name
-    
-    model_s_k = 0
-    if correlated_eff == true
-        model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    else
-        # we remove alpha and uncertainties
-        model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
-    end
-    model_b_k = deltaE * part_k.exposure * p[b_name]
+
+    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
+
+   
     model_tot_k = model_b_k + model_s_k
     
     # constrain λ not to be negative
@@ -106,14 +110,13 @@ Returns:
                     total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, stat_only=stat_only, correlated_eff=correlated_eff)
                 else
                     # no events are there for a given partition
-                    total_ll += build_likelihood_zero_obs_evts(part_k, p, correlated_eff=correlated_eff)
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p, correlated_eff=correlated_eff,stat_only=stat_only)
                 end
             end
             
-            ## trick to include the prior 
+            ## trick to include thes sqrt prior 
             if (sqrt_prior)
                 total_ll+=-log(2)-0.5*log(s_max)-0.5*log(p.S+eps(p.S))
-                #println(p.S,pull)
             end
 
 
@@ -143,7 +146,7 @@ which is equivalent to the standard sampling methods.
 
 Parameters
 ----------
-    - samples::DensitySamplesVector the samples of a past fit
+    - samples::DensitySamplesVector the samples of a past fit or a NamedTuple of best fit
     - partitions::Table of the partition info
     - part_event_index: index for the parameters for partitions with events
 Keyword arguments
@@ -167,10 +170,25 @@ Returns
     # create the array to fill
     events=[]
 
+    for (idx_k, part_k) in enumerate(partitions)
 
+        b_name = part_k.bkg_name
+        
+        if (samples isa NamedTuple)
+            p= samples
+        else
+            distribution = Categorical(samples.weights)
 
+            # Generate a random index based on the weights
+            random_index = rand(distribution)
+            p = samples.v[random_index]
+        end
+        println(p)
+        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
 
+        print(model_s_k,model_b_k)
 
+    end
 end
 ##############################################
 ##############################################

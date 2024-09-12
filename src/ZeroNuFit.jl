@@ -77,7 +77,7 @@ Parameters:
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
         prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
-        
+        generate_data(samples,partitions,part_event_index,best_fit=false,stat_only=config["stat_only"],bkg_only=false,seed=nothing)
     end
     
     @info bat_report(samples)
