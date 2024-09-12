@@ -70,7 +70,8 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         sqrt_prior=false
         s_max=nothing
     end
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only,sqrt_prior=sqrt_prior,s_max=s_max)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,
+        stat_only=stat_only,sqrt_prior=sqrt_prior,s_max=s_max)
     @info "built likelihood"
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
