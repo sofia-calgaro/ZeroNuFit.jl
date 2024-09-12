@@ -17,7 +17,7 @@ import HDF5
 
 function get_partitions_new(part_path::String)
     """
-    Get the partition info from a jason file and save  to a Table
+    Get the partition info from a JSON file and save to a Table
 
     """
         part_data_json = JSON.parsefile(part_path,dicttype=DataStructures.OrderedDict)
@@ -105,7 +105,7 @@ function get_events(event_path,partitions)
             
             for (idx,part) in enumerate(partitions)
                 if (part.experiment ==event["experiment"] && part.detector==event["detector"] && 
-                    event["timestamp"]<part.end_ts && event["timestamp"]>part.start_ts)
+                    event["timestamp"]<part.end_ts+1 && event["timestamp"]>part.start_ts-1)
 
                     append!(events[idx],event["energy"])
                     found=true

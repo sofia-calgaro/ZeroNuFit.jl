@@ -54,6 +54,11 @@ function get_stat_blocks(partitions,events,part_event_index;config,stat_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
+    # check if the key 'correlated' exists
+    if !haskey(config["bkg"], "correlated")
+        throw(ArgumentError("Key 'correlated' not found for the background parameter in the configuration JSON! Exit here"))
+    end
+    
     corr= config["bkg"]["correlated"]
     if (corr==true)
         prior,par_names=build_hd_prior(partitions,part_event_index,config=config,stat_only=stat_only)
@@ -70,9 +75,17 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         sqrt_prior=false
         s_max=nothing
     end
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,
-        stat_only=stat_only,sqrt_prior=sqrt_prior,s_max=s_max)
+
+    
+    if config["correlated_eff"] == true
+        correlated_eff=true
+    else
+        correlated_eff=false
+    end
+    
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only,correlated_eff=correlated_eff,sqrt_prior=sqrt_prior,s_max=s_max)
     @info "built likelihood"
+    
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
     return prior,likelihood,posterior,par_names
