@@ -75,6 +75,7 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         sqrt_prior=false
         s_max=nothing
     end
+
     
     if config["correlated_eff"] == true
         correlated_eff=true
