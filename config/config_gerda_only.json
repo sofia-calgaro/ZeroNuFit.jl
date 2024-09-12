@@ -1,13 +1,13 @@
 {
     "debug":false,
-    "partitions":["config/partitions_gerda_new.json"],
-    "events":    ["config/events_gerda.json"],
-    "output_path": "output/fit_gerda/",
-    "overwrite":true,
+    "partitions":["../legend-0vbb-config/partitions_gerda_new.json"],
+    "events":    ["../legend-0vbb-config/events_gerda.json"],
+    "output_path": "output/fit_gerda_2/",
+    "overwrite":false,
     "bat_fit": {"nsteps": 1e5, "nchains": 4},
     "plot": {"fit_and_data": false, "bandfit_and_data": false},
-    "signal": {"upper_bound":1e-25, "prior": "uniform"},
-    "bkg": {"upper_bound":1e-3, "prior": "uniform"},
+    "signal": {"upper_bound":1000, "prior": "uniform"},
+    "bkg": {"upper_bound":1e-2, "prior": "uniform","correlated":false},
     "stat_only":false
 }
 
