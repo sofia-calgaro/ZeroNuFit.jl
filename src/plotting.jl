@@ -266,7 +266,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             # plot prior
             if priors!=nothing
                 if (par==:S && sqrt_prior)
-                    y= 1 ./(2*sqrt(s_max)*x) 
+                    y= x-> 1 ./(2*sqrt(s_max*x)) 
                 else
                     color="black"
                     if (hier==false)
