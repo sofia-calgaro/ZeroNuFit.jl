@@ -12,7 +12,7 @@ m_76 = 75.92E-3 # kg/mol
 deltaE = 240 # keV
 sig_units =1e-27 # signal is in units of this
 
-function get_mu_s_b(p,part_k,index_part_with_events;correlated_eff=true,stat_only=false)
+function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,index_part_with_events::Int;correlated_eff::Bool=true,stat_only::Bool=false)
     """
     Get the expected number of signal and background counts in a partition
     """
@@ -32,7 +32,7 @@ function get_mu_s_b(p,part_k,index_part_with_events;correlated_eff=true,stat_onl
     return model_s_k,model_b_k
 end
 
-function build_likelihood_zero_obs_evts(part_k, p;stat_only=false, correlated_eff=true)
+function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;stat_only::Bool=false, correlated_eff::Bool=true)
 """
 Function to calculate the partial likelihood for a partition with 0 events
     
@@ -47,7 +47,8 @@ Function to calculate the partial likelihood for a partition with 0 events
     return ll_value
 end
 
-function build_likelihood_per_partition(idx_k, idx_part_with_events,part_k, events_k, p;stat_only=false, correlated_eff=true)
+function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, p::NamedTuple;
+                                        stat_only::Bool=false, correlated_eff::Bool=true)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -87,7 +88,8 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
-function build_likelihood_looping_partitions(partitions, events,part_event_index;stat_only=false,correlated_eff=true,sqrt_prior=false,s_max=nothing)
+function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int};
+                                            stat_only=false,correlated_eff=true,sqrt_prior=false,s_max=nothing)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -100,7 +102,7 @@ Returns:
     DensityInterface.logfuncdensity - the likelihood function
 """
     @debug part_event_index
-    return DensityInterface.logfuncdensity( function(p)
+    return DensityInterface.logfuncdensity( function(p::NamedTuple)
             total_ll = 0.0
             
             for (idx_k, part_k) in enumerate(partitions)
@@ -125,11 +127,13 @@ Returns:
     )
 end
 
+
+
 ##############################################
 ##############################################
 ##############################################
-function generate_data(samples,partitions,part_event_index,
-    best_fit::Bool=false,stat_only=false,bkg_only=false,seed=nothing)
+function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int};
+    best_fit::Bool=false,stat_only=false,bkg_only=false,seed=nothing,correlated_eff=true)
 """
 Generates data from a posterior distribution.y
 This is based on the posterior predictive distributions. 
@@ -156,39 +160,63 @@ Keyword arguments
     - bkg_only::Bool where the fit was without signal,
     - seed::Int random seed
 Returns
-    Array of energies in each partition
+    OrderedDict of the data
 """
 
     # seed the seed
+    output=OrderedDict("events"=>[])
     if (seed==nothing)
-        Random.seed!(round(10000*(rand())))
+        Random.seed!(Int(round(10000*(rand()))))
     else
         Random.seed!(seed)
     end
-    println(rand)
     
+    
+    if (samples isa NamedTuple)
+        p= samples
+    else
+        distribution = Categorical(samples.weight/sum(samples.weight)) # Generate a random index based on the weights
+        random_index = rand(distribution)
+        p = samples.v[random_index]
+    end
     # create the array to fill
     events=[]
 
     for (idx_k, part_k) in enumerate(partitions)
 
-        b_name = part_k.bkg_name
-        
-        if (samples isa NamedTuple)
-            p= samples
-        else
-            distribution = Categorical(samples.weights)
-
-            # Generate a random index based on the weights
-            random_index = rand(distribution)
-            p = samples.v[random_index]
-        end
-        println(p)
+        b_name = part_k.bkg_name           
+        idx_part_with_events=part_event_index[idx_k]
         model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
 
-        print(model_s_k,model_b_k)
+        n_s = rand(Poisson(model_s_k))
+        n_b = rand(Poisson(model_b_k))
+        events =generate_disjoint_uniform_samples(n_b)
+        if (bkg_only == false)
+            for i in 1:n_s
+                if (stat_only==true || idx_part_with_events==0)
+                    
+                    append!(events,rand(Normal(Qbb + part_k.bias, part_k.fwhm/2.355)))
+                else    
+                    append!(events,rand(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events])))
+                end
+        
+            end
+        end
+        times = rand(Uniform(part_k.start_ts,part_k.end_ts),length(events))
+        times=[Int(round(t)) for t in times]
+        
+        if (length(times)>0)
+            for (t,e) in zip(times,events)
+                append!(output["events"],[OrderedDict("timestamp"=>t,"experiment"=>part_k.experiment,
+                "detector"=>part_k.detector,"energy"=>e
+                )])
+            end
+
+        end
 
     end
+    display(output["events"])
+
 end
 ##############################################
 ##############################################

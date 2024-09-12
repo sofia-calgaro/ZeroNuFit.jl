@@ -50,7 +50,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function get_stat_blocks(partitions,events,part_event_index;config,stat_only)
+function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config,stat_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
@@ -91,9 +91,9 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     return prior,likelihood,posterior,par_names
 end
 
-function run_fit_over_partitions(partitions,events,part_event_index;config,stat_only)
+function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int};config,stat_only)
 """
-FUnction to run the fit looping over partitions
+Function to run the fit looping over partitions
 """
     prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=stat_only)
 
