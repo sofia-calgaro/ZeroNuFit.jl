@@ -17,7 +17,7 @@ import HDF5
 
 function get_partitions_new(part_path::String)
     """
-    Get the partition info from a jason file and save  to a Table
+    Get the partition info from a JSON file and save to a Table
 
     """
         part_data_json = JSON.parsefile(part_path,dicttype=DataStructures.OrderedDict)
