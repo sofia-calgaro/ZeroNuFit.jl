@@ -144,12 +144,9 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
     end
     hist_data = append!(Histogram(1930:1:2190), energies)
     p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
-
-    if toy_idx==nothing
-        savefig(joinpath(output, "plots/fit_over_data.pdf"))
-    else
-        savefig(joinpath(output, "plots/fit_over_data_$(toy_idx).pdf"))
-    end
+    
+    log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+    savefig(joinpath(output, "plots/fit_over_data$log_suffix.pdf"))
     
 end
 
@@ -167,11 +164,9 @@ Plots the correlation matrixs
 
     corr =  100*sqrt(covariance_matrix ./ (var .* var'))
     heatmap(corr,  xlabel="Parameter Index", ylabel="Parameter Index", color=:diverging_bwr_40_95_c42_n256,clim=(-100,100),ctitle="Correlation Coefficient")
-    if toy_idx==nothing
-        savefig(joinpath(output,"plots/correlations.pdf"))
-    else
-        savefig(joinpath(output,"plots/correlations_$(toy_idx).pdf"))
-    end
+    
+    log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+    savefig(joinpath(output,"plots/correlations$log_suffix.pdf"))
 end
 
 function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=nothing)
@@ -198,12 +193,9 @@ function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=n
             p=histogram2d(x, y, bins=200, cmap=:batlow, xlabel=par_names[par_x], ylabel=par_names[par_y],
             right_margin = 10Plots.mm)
             savefig(p,"temp.pdf")
-
-            if toy_idx==nothing
-                append_pdf!(joinpath(output, "plots/2D_posterior.pdf"), "temp.pdf", cleanup=true)
-            else
-                append_pdf!(joinpath(output, "plots/2D_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
-            end
+            
+            log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+            append_pdf!(joinpath(output, "plots/2D_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
         end
     end
 
@@ -227,14 +219,9 @@ Function to plot 1D and 2D marginalized distributions (and priors)
     @debug "Unshaped samples:", bat_report(unshaped_samples)
     
     # remove old file
-    if toy_idx==nothing
-        if isfile(joinpath(output, "plots/marg_posterior.pdf"))
-            Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
-        end
-    else
-        if isfile(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"))
-            Filesystem.rm(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"),force=true)
-        end
+    log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+    if isfile(joinpath(output, "plots/marg_posterior$log_suffix.pdf"))
+        Filesystem.rm(joinpath(output, "plots/marg_posterior$log_suffix.pdf"),force=true)
     end
     
 
@@ -312,11 +299,8 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             end
 
             savefig(p,"temp.pdf")
-            if toy_idx==nothing
-                append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
-            else
-                append_pdf!(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
-            end
+            log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+            append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
             ct += 1
             
         # multivariate parameters    
@@ -352,11 +336,8 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 xaxis!(xname)
                 ylims!(0,ylims()[2])
                 savefig(p,"temp.pdf")
-                if toy_idx==nothing
-                    append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
-                else
-                    append_pdf!(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
-                end
+                log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
+                append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
                 ct += 1
             end
         end
