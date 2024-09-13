@@ -131,7 +131,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag)
+function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag, toy_idx=nothing)
     
     # create histo with energies 
     energies = []
@@ -145,7 +145,11 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
     hist_data = append!(Histogram(1930:1:2190), energies)
     p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
 
-    savefig(joinpath(output, "plots/fit_over_data.pdf"))
+    if toy_idx==nothing
+        savefig(joinpath(output, "plots/fit_over_data.pdf"))
+    else
+        savefig(joinpath(output, "plots/fit_over_data_$(toy_idx).pdf"))
+    end
     
 end
 
@@ -153,7 +157,7 @@ end
 ##############################################
 ##############################################
 
-function plot_correlation_matrix(samples,output;par_names=nothing)
+function plot_correlation_matrix(samples,output;par_names=nothing,toy_idx=nothing)
 """
 Plots the correlation matrixs
 """
@@ -163,10 +167,14 @@ Plots the correlation matrixs
 
     corr =  100*sqrt(covariance_matrix ./ (var .* var'))
     heatmap(corr,  xlabel="Parameter Index", ylabel="Parameter Index", color=:diverging_bwr_40_95_c42_n256,clim=(-100,100),ctitle="Correlation Coefficient")
-    savefig(joinpath(output,"plots/correlations.pdf"))
+    if toy_idx==nothing
+        savefig(joinpath(output,"plots/correlations.pdf"))
+    else
+        savefig(joinpath(output,"plots/correlations_$(toy_idx).pdf"))
+    end
 end
 
-function plot_two_dim_posteriors(samples,pars,output;par_names=nothing)
+function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=nothing)
     first_sample = samples.v[1]
 
     for par_x in pars
@@ -191,7 +199,11 @@ function plot_two_dim_posteriors(samples,pars,output;par_names=nothing)
             right_margin = 10Plots.mm)
             savefig(p,"temp.pdf")
 
-            append_pdf!(joinpath(output, "plots/2D_posterior.pdf"), "temp.pdf", cleanup=true)
+            if toy_idx==nothing
+                append_pdf!(joinpath(output, "plots/2D_posterior.pdf"), "temp.pdf", cleanup=true)
+            else
+                append_pdf!(joinpath(output, "plots/2D_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
+            end
         end
     end
 
@@ -204,7 +216,7 @@ end
 ##############################################
 
 function plot_marginal_distr(partitions,samples,pars,output;sqrt_prior=false,
-    priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing,hier=false)    
+    priors=nothing,par_names=nothing,plot_config=nothing,s_max=nothing,hier=false,toy_idx=nothing)    
 """
 Function to plot 1D and 2D marginalized distributions (and priors)
 """
@@ -215,8 +227,14 @@ Function to plot 1D and 2D marginalized distributions (and priors)
     @debug "Unshaped samples:", bat_report(unshaped_samples)
     
     # remove old file
-    if isfile(joinpath(output, "plots/marg_posterior.pdf"))
-        Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
+    if toy_idx==nothing
+        if isfile(joinpath(output, "plots/marg_posterior.pdf"))
+            Filesystem.rm(joinpath(output, "plots/marg_posterior.pdf"),force=true)
+        end
+    else
+        if isfile(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"))
+            Filesystem.rm(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"),force=true)
+        end
     end
     
 
@@ -294,7 +312,11 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             end
 
             savefig(p,"temp.pdf")
-            append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
+            if toy_idx==nothing
+                append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
+            else
+                append_pdf!(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
+            end
             ct += 1
             
         # multivariate parameters    
@@ -330,19 +352,15 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 xaxis!(xname)
                 ylims!(0,ylims()[2])
                 savefig(p,"temp.pdf")
-                append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
+                if toy_idx==nothing
+                    append_pdf!(joinpath(output, "plots/marg_posterior.pdf"), "temp.pdf", cleanup=true)
+                else
+                    append_pdf!(joinpath(output, "plots/marg_posterior_$(toy_idx).pdf"), "temp.pdf", cleanup=true)
+                end
                 ct += 1
             end
         end
     end
-    
-    # 2D posteriors
-    plot(
-        samples,
-        mean = false, std = false, globalmode = false, marginalmode = true,
-        nbins = 200
-    )
-    savefig(joinpath(output, "plots/all_marg_posterior_2D.pdf"))
         
 end
 

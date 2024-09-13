@@ -15,7 +15,7 @@ include("src/ZeroNuFit.jl")
 using .ZeroNuFit
 
 
-function set_logger(config::Dict,output_path::String)
+function set_logger(config::Dict,output_path::String;toy_idx::Int)
 """
 Function which sets the logging for the program
 Parameters
@@ -29,19 +29,20 @@ Parameters
         terminal_log=global_logger(ConsoleLogger(stderr, LogLevel(Info)))
     end
 
+    log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
 
     logger = TeeLogger(
         terminal_log,
         # Accept any messages with level >= Info
         MinLevelLogger(
-            FileLogger("$output_path/logs/logfile.log"),
+            FileLogger("$output_path/logs/logfile$log_suffix.log"),
             Logging.Info
         ),
         # Accept any messages with level >= Debug
         MinLevelLogger(
-            FileLogger("$output_path/logs/debug.log"),
+            FileLogger("$output_path/logs/debug$log_suffix.log"),
             Logging.Debug,
-        ),
+        )
     )
     global_logger(logger)
 
@@ -70,6 +71,10 @@ Parse the script arguments
             help = "path to config file"
             arg_type = String
             required = true
+        "--index_toy", "-i"
+            help = "index of sensitivity toy"
+            arg_type = Int
+            required = false
     end
     
     parse_args(settings)
