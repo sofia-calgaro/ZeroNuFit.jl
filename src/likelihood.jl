@@ -6,7 +6,7 @@ using Plots,LaTeXStrings
 using Cuba
 using OrderedCollections
 
-function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;nuis_correlated::Bool=true,nuis_prior::Bool=false)
+function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;nuis_correlated::Bool=true,nuis_prior::Bool=false,bkg_only::Bool=false)
     """
     Get the expected number of signal and background counts in a partition
     """
@@ -17,14 +17,16 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;n
     b_name = part_k.bkg_name
 
     model_s_k = 0
-    if nuis_correlated == true
-        model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-    # we remove alpha and uncertainties
-    else
-        if (idx_part_with_events!=0 || nuis_prior==true)
-            model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
+    if bkg_only==false
+        if nuis_correlated == true
+            model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
+        # we remove alpha and uncertainties
         else
-            model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
+            if (idx_part_with_events!=0 || nuis_prior==true)
+                model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
+            else
+                model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
+            end
         end
     end
     model_b_k = deltaE * part_k.exposure * p[b_name]
@@ -32,14 +34,14 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;n
     return model_s_k,model_b_k
 end
 
-function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;nuis_prior::Bool=false, nuis_correlated::Bool=true)
+function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;nuis_prior::Bool=false, nuis_correlated::Bool=true, bkg_only::Bool=false)
 """
 Function to calculate the partial likelihood for a partition with 0 events
     
 """
 
     ll_value = 0
-    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
+    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -48,7 +50,7 @@ Function to calculate the partial likelihood for a partition with 0 events
 end
 
 function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, p::NamedTuple;
-                                        nuis_prior::Bool=false, nuis_correlated::Bool=true)
+                                        nuis_prior::Bool=false, nuis_correlated::Bool=true, bkg_only::Bool=false)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -58,7 +60,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
 
-    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
+    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
    
     model_tot_k = model_b_k + model_s_k
     
@@ -71,26 +73,25 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value += logpdf(Poisson(λ), length(events_k))
 
-  
-    for evt_energy in events_k
-        term1 = model_b_k / deltaE # background
+    if bkg_only==false
+        for evt_energy in events_k
+            term1 = model_b_k / deltaE # background
 
-        if (nuis_prior==false)
-            term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
-        else
-            term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
+            if (nuis_prior==false)
+                term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
+            else
+                term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
+            end
+            ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
         end
-        ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
     end
-
-   
     
     return ll_value
 end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
 function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int};
-                                            nuis_prior=true,nuis_correlated=true,sqrt_prior=false,s_max=nothing)
+                                            nuis_prior=true,nuis_correlated=true,sqrt_prior=false,s_max=nothing,bkg_only=false)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -110,10 +111,10 @@ Returns:
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
-                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, nuis_prior=nuis_prior, nuis_correlated=nuis_correlated)
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, nuis_prior=nuis_prior, nuis_correlated=nuis_correlated, bkg_only=bkg_only)
                 else
                     # no events are there for a given partition
-                    total_ll += build_likelihood_zero_obs_evts(part_k, p,nuis_prior=nuis_prior, nuis_correlated=nuis_correlated)
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p,nuis_prior=nuis_prior, nuis_correlated=nuis_correlated, bkg_only=bkg_only)
                 end
             end
             
@@ -188,7 +189,7 @@ Returns
 
         b_name = part_k.bkg_name           
         idx_part_with_events=part_event_index[idx_k]
-        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
+        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
 
         n_s = rand(Poisson(model_s_k))
         n_b = rand(Poisson(model_b_k))
@@ -254,7 +255,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function build_prior(partitions,part_event_index;config,nuis_prior=true)
+function build_prior(partitions,part_event_index;config,nuis_prior=true,bkg_only=false)
 """
 Builds the priors for use in the fit
 ----------
@@ -313,7 +314,11 @@ Parameters
             ratio = - all_eff_tot ./ all_eff_tot_sigma 
             α_min = maximum(ratio)
             
-            return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+            if bkg_only==false
+                return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+            else
+                return distprod(;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
+            end
             
         else
             
@@ -342,7 +347,11 @@ Parameters
                 pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
             end
             
-            return distprod(S=distrS,;distrB_multi..., ε=eff, σ=res, 𝛥=bias),pretty_names
+            if bkg_only==false
+                return distprod(S=distrS,;distrB_multi..., ε=eff, σ=res, 𝛥=bias),pretty_names
+            else
+                return distprod(;distrB_multi..., ε=eff, σ=res, 𝛥=bias),pretty_names
+            end
         end
         
     
@@ -365,7 +374,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function build_hd_prior(partitions,part_event_index;config,nuis_prior=true)
+function build_hd_prior(partitions,part_event_index;config,nuis_prior=true,bkg_only=false)
 """
 [experimental ] builds the priors for use in the fit with a Hierachical structure
 ----------
@@ -422,15 +431,27 @@ Parameters
             end
 
             dis_B = distprod
-            hd = BAT.HierarchicalDistribution(
-                    v -> begin 
-                    dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                    BAT.NamedTupleDist(;dict...)
-                    end,
-                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
-                    , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
-                    )
-            ) 
+            if bkg_only==false
+                hd = BAT.HierarchicalDistribution(
+                        v -> begin 
+                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                        BAT.NamedTupleDist(;dict...)
+                        end,
+                        BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
+                        , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
+                        )
+                ) 
+            else
+                hd = BAT.HierarchicalDistribution(
+                        v -> begin 
+                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                        BAT.NamedTupleDist(;dict...)
+                        end,
+                        BAT.NamedTupleDist(B=distrB,σB=0..1
+                        , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
+                        )
+                ) 
+            end
             pretty_names[:B]="B [cts/keV/kg/yr]"
             pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
         else
@@ -459,15 +480,27 @@ Parameters
             end
 
             dis_B = distprod
-            hd = BAT.HierarchicalDistribution(
-                    v -> begin 
-                    dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                    BAT.NamedTupleDist(;dict...)
-                    end,
-                    BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
-                    , ε=eff, σ=res, 𝛥=bias
-                    )
-            ) 
+            if bkg_only==false
+                hd = BAT.HierarchicalDistribution(
+                        v -> begin 
+                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                        BAT.NamedTupleDist(;dict...)
+                        end,
+                        BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
+                        , ε=eff, σ=res, 𝛥=bias
+                        )
+                ) 
+            else
+                hd = BAT.HierarchicalDistribution(
+                        v -> begin 
+                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                        BAT.NamedTupleDist(;dict...)
+                        end,
+                        BAT.NamedTupleDist(B=distrB,σB=0..1
+                        , ε=eff, σ=res, 𝛥=bias
+                        )
+                ) 
+            end
             pretty_names[:B]="B [cts/keV/kg/yr]"
             pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
             

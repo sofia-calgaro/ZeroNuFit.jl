@@ -41,6 +41,7 @@ Before running the code, set the input config.json file with following entries:
             "scheme":"red",
             "alpha":0.3
         },
+    "bkg_only": false,
     "signal": {"upper_bound":1000, "prior": "uniform"},
     "bkg": {"upper_bound":0.1, "prior": "uniform", "correlated": true},
     "nuisances": {"prior": true, "correlated": true}
@@ -48,16 +49,17 @@ Before running the code, set the input config.json file with following entries:
 ```
 
 where
-- `"debug": true` if you want to display debug output on terminal
-- `"partitions"`: list of partitions JSON inputs; it takes one entry per experiment
-- `"events"`: list of events JSON inputs; it takes one entry per experiment
-- `"output_path"`: path where to store outputs (logs, plots, mcmc results)
-- `"overwrite": true` if you want to overwrite a previous fit with same `output_path`; if set to `false` but no fits were previously performed (ie there are no outputs to overwrite), the code will save the output of this fit
-- `"bat_fit"`: settings for the BAT fit
-- `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances
-- `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...)
-- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`)
-- `"nuisances"`: set `"prior": true` if you want to include a prior for nuisance parameters (res, bias, eff.) and `"correlated": true` if you want to use one variable to correlate the nuisance parameters (eg to speed up the computation times)
+- `"debug": true` if you want to display debug output on terminal;
+- `"partitions"`: list of partitions JSON inputs; it takes one entry per experiment;
+- `"events"`: list of events JSON inputs; it takes one entry per experiment;
+- `"output_path"`: path where to store outputs (logs, plots, mcmc results);
+- `"overwrite": true` if you want to overwrite a previous fit with same `output_path`; if set to `false` but no fits were previously performed (ie there are no outputs to overwrite), the code will save the output of this fit;
+- `"bat_fit"`: settings for the BAT fit;
+- `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances;
+- `"bkg_only": true` if we fit assuming no signal (S=0), false otherwise;
+- `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...);
+- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`);
+- `"nuisances"`: set `"prior": true` if you want to include a prior for nuisance parameters (res, bias, eff.) and `"correlated": true` if you want to use one variable to correlate the nuisance parameters (eg to speed up the computation times).
 
 
 ## Partition and events files
@@ -143,15 +145,15 @@ The input config file has the following entries:
 ```
 {
     "path_to_fit": "output/fit_alpha_high_stat_true_TOBY4_v4/",
-    "best_fit": false, 
-    "bkg_only": false,
+    "best_fit": false,
     "seed": null
 }
 
 ```
 
 where
-- `"path_to_fit"` is the path to the already performed fit over real data
-- `"best_fit": true` if we want to fix the paramaters to the best fit
-- `"bkg_only": true` if the fit over real data was performed assuming no signal
-- `"seed": null` if we want a random seed when generating fake data, otherwise you can fix it to an Int value
+- `"path_to_fit"` is the path to the already performed fit over real data;
+- `"best_fit": true` if we want to fix the paramaters to the best fit;
+- `"seed": null` if we want a random seed when generating fake data, otherwise you can fix it to an Int value.
+
+Any information about the signal being included or not in the fit of real data, was saved and retrieved from the output JSON file with results.
