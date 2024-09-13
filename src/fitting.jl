@@ -50,10 +50,12 @@ end
 ##############################################
 ##############################################
 ##############################################
-function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config,stat_only)
+function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
+    nuisances = config["nuisances"] 
+    
     # check if the key 'correlated' exists
     if !haskey(config["bkg"], "correlated")
         throw(ArgumentError("Key 'correlated' not found for the background parameter in the configuration JSON! Exit here"))
@@ -61,9 +63,9 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     
     corr= config["bkg"]["correlated"]
     if (corr==true)
-        prior,par_names=build_hd_prior(partitions,part_event_index,config=config,stat_only=stat_only)
+        prior,par_names=build_hd_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"])
     else
-        prior,par_names=build_prior(partitions,part_event_index,config=config,stat_only=stat_only)
+        prior,par_names=build_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"])
     end
     @info "built prior"
 
@@ -76,14 +78,7 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         s_max=nothing
     end
 
-    
-    if config["correlated_eff"] == true
-        correlated_eff=true
-    else
-        correlated_eff=false
-    end
-    
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,stat_only=stat_only,correlated_eff=correlated_eff,sqrt_prior=sqrt_prior,s_max=s_max)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,nuis_prior=nuisances["prior"],nuis_correlated=nuisances["correlated"],sqrt_prior=sqrt_prior,s_max=s_max)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 
@@ -91,11 +86,11 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     return prior,likelihood,posterior,par_names
 end
 
-function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int};config,stat_only)
+function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int};config)
 """
 Function to run the fit looping over partitions
 """
-    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=stat_only)
+    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config)
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])

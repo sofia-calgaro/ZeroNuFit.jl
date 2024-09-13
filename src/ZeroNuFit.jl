@@ -72,18 +72,18 @@ Parameters:
             @info "OVERWRITING THE PREVIOUS FIT!"
         end
 
-        samples,prior,par_names = run_fit_over_partitions(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+        samples,prior,par_names = run_fit_over_partitions(partitions,events,part_event_index,config=config) 
         @info "fit ran succesfully"
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
-        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
-        generate_data(samples,partitions,part_event_index,best_fit=false,stat_only=config["stat_only"],bkg_only=false,seed=nothing)
+        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config) 
+        generate_data(samples,partitions,part_event_index,best_fit=false,nuis_prior=config["nuisances"]["prior"],bkg_only=false,seed=nothing)
     end
     
     @info bat_report(samples)
     
-    _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,stat_only=config["stat_only"]) 
+    _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config) 
     
    
     save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names)
