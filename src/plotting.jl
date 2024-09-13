@@ -131,7 +131,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag, toy_idx=nothing)
+function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag; toy_idx=nothing)
     
     # create histo with energies 
     energies = []
