@@ -43,21 +43,22 @@ Parameters:
     @info "... load events"
     events_multi = []
     for event_path in config["events"]
-        println(event_path)
         append!(events_multi,[get_events(event_path,partitions)])
     end
-    events=[]
+
+    events=Array{Vector{Float64}}(undef,length(partitions))
     for i in 1:length(partitions)
         
-        arr_tmp =[]
+        arr_tmp =Vector{Float64}()
         for sub in events_multi
-            if (sub[i]!=Any[])
+            if (sub[i]!=Float64[])
+                
                 append!(arr_tmp,sub[i])
                 end
-            end
-            append!(events,[arr_tmp])
         end
-
+         
+        events[i]=arr_tmp
+    end
     @debug events
 
     @info "get which partitions have events"

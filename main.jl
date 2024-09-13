@@ -79,6 +79,7 @@ end
 function main()
     
     # read parsed arguments
+    @info "running using ",Base.Threads.nthreads()," threads"
     parsed_args = get_argparse()
 
     # read config path
