@@ -69,8 +69,8 @@ function main()
     
     if config["low_stat"]==true
         @info "we set the MCMC statistics to 10^5 iterations and 5 chains"
-        config_real_data["bat_fit"]["nsteps"] = 1e6
-        config_real_data["bat_fit"]["nchains"] = 6
+        config_real_data["bat_fit"]["nsteps"] = 1e5
+        config_real_data["bat_fit"]["nchains"] = 5
     end
 
     # fit fake data
