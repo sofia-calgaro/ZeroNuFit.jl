@@ -128,7 +128,7 @@ It is possible to supply a list of partition and event files in this case the li
 > If multiple files are provided `fit_group` must still be unique.
 
 
-## Sensitivity fit
+## Sensitivity studies
 Another module is present for running sensitivity studies. This can be run as
 
 ```
@@ -152,6 +152,6 @@ The input config file has the following entries:
 
 where
 - `"path_to_fit"` is the path to the already performed fit over real data
-- `"best_fit": true ` if we want to fix the paramaters to the best fit
+- `"best_fit": true` if we want to fix the paramaters to the best fit
 - `"bkg_only": true` if the fit over real data was performed assuming no signal
-- `"seed": null` if we want a random seed when generating fake data, otherwise you can fix it to 
+- `"seed": null` if we want a random seed when generating fake data, otherwise you can fix it to an Int value
