@@ -5,17 +5,14 @@ using TypedTables
 using Plots,LaTeXStrings
 using Cuba
 
-# define some constants -TODO add to config
-Qbb = 2039.06 # keV
-N_A = 6.022E23
-m_76 = 75.92E-3 # kg/mol
-deltaE = 240 # keV
-sig_units =1e-27 # signal is in units of this
-
 function get_mu_s_b(p,part_k,index_part_with_events;correlated_eff=true,stat_only=false)
     """
     Get the expected number of signal and background counts in a partition
     """
+    N_A = 6.022E23
+    m_76 = 75.92E-3 # kg/mol
+    deltaE = 240 # keV
+    sig_units =1e-27 # signal is in units of this
     b_name = part_k.bkg_name
 
     model_s_k = 0
@@ -54,6 +51,8 @@ function build_likelihood_per_partition(idx_k, idx_part_with_events,part_k, even
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
 """
+    Qbb = 2039.06 # keV
+    deltaE = 240 # keV
 
     ll_value = 0
 
