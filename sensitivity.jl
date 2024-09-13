@@ -66,6 +66,12 @@ function main()
     end
     config_real_data["bkg_only"] = false
     @info "...we now set the fit option over fake data to B!=0 and S!=0"
+    
+    if config["low_stat"]==true
+        @info "we set the MCMC statistics to 10^5 iterations and 5 chains"
+        config_real_data["bat_fit"]["nsteps"] = 1e6
+        config_real_data["bat_fit"]["nchains"] = 6
+    end
 
     # fit fake data
     ZeroNuFit.run_analysis(config_real_data,output_path="$output_path/sensitivity",toy_idx=toy_idx)
