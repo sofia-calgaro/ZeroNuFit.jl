@@ -126,3 +126,32 @@ It is possible to supply a list of partition and event files in this case the li
 
 > [!WARNING]  
 > If multiple files are provided `fit_group` must still be unique.
+
+
+## Sensitivity fit
+Another module is present for running sensitivity studies. This can be run as
+
+```
+julia sensitivity.jl -c config/config_fake_data.json -i N
+```
+
+where `N` is an integer number corresponding to the toy index.
+The command can be run in an external bash script for looping over this index.
+
+The input config file has the following entries:
+
+```
+{
+    "path_to_fit": "output/fit_alpha_high_stat_true_TOBY4_v4/",
+    "best_fit": false, 
+    "bkg_only": false,
+    "seed": null
+}
+
+```
+
+where
+- `"path_to_fit"` is the path to the already performed fit over real data
+- `"best_fit": true ` if we want to fix the paramaters to the best fit
+- `"bkg_only": true` if the fit over real data was performed assuming no signal
+- `"seed": null` if we want a random seed when generating fake data, otherwise you can fix it to 
