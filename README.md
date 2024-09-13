@@ -43,7 +43,7 @@ Before running the code, set the input config.json file with following entries:
         },
     "signal": {"upper_bound":1000, "prior": "uniform"},
     "bkg": {"upper_bound":0.1, "prior": "uniform", "correlated": true},
-    "stat_only":false
+    "nuisances": {"prior": true, "correlated": true}
 }
 ```
 
@@ -57,7 +57,7 @@ where
 - `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances
 - `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...)
 - `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`)
-- `"stat_only":true` // false if we use pull terms for additional nuisance parameters (res, bias, eff.)
+- `"nuisances"`: set `"prior": true` if you want to include a prior for nuisance parameters (res, bias, eff.) and `"correlated": true` if you want to use one variable to correlate the nuisance parameters (eg to speed up the computation times)
 
 
 ## Partition and events files

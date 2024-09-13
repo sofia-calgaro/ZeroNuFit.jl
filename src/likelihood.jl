@@ -5,7 +5,7 @@ using TypedTables
 using Plots,LaTeXStrings
 using Cuba
 
-function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,index_part_with_events::Int;correlated_eff::Bool=true,stat_only::Bool=false)
+function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;nuis_correlated::Bool=true,nuis_prior::Bool=false)
     """
     Get the expected number of signal and background counts in a partition
     """
@@ -16,11 +16,11 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,index_part_with_events::Int
     b_name = part_k.bkg_name
 
     model_s_k = 0
-    if correlated_eff == true
+    if nuis_correlated == true
         model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
     # we remove alpha and uncertainties
     else
-        if (index_part_with_event!=0 || stat_only==false)
+        if (idx_part_with_events!=0 || nuis_prior==true)
             model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
         else
             model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
@@ -31,14 +31,14 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,index_part_with_events::Int
     return model_s_k,model_b_k
 end
 
-function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;stat_only::Bool=false, correlated_eff::Bool=true)
+function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;nuis_prior::Bool=false, nuis_correlated::Bool=true)
 """
 Function to calculate the partial likelihood for a partition with 0 events
     
 """
 
     ll_value = 0
-    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,correlated_eff=correlated_eff,stat_only=stat_only)
+    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -47,7 +47,7 @@ Function to calculate the partial likelihood for a partition with 0 events
 end
 
 function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, p::NamedTuple;
-                                        stat_only::Bool=false, correlated_eff::Bool=true)
+                                        nuis_prior::Bool=false, nuis_correlated::Bool=true)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -57,7 +57,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
 
-    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
+    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
    
     model_tot_k = model_b_k + model_s_k
     
@@ -74,7 +74,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
     for evt_energy in events_k
         term1 = model_b_k / deltaE # background
 
-        if (stat_only==true)
+        if (nuis_prior==false)
             term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
         else
             term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
@@ -89,14 +89,14 @@ end
 
 # Tuple{Real, Real, Vector{Real}, Vector{Real}}
 function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int};
-                                            stat_only=false,correlated_eff=true,sqrt_prior=false,s_max=nothing)
+                                            nuis_prior=true,nuis_correlated=true,sqrt_prior=false,s_max=nothing)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
 -----------
     -partitions: Table - partitions input file
     -events: Array      - list of events in each partitions (with their energy)
-    -stat_only:bool     -whether the fit includes only parameters of interest
+    -nuis_prior:bool     - true if we want to include priors for nuisance parameters (bias, res, eff)
 Returns:
 --------
     DensityInterface.logfuncdensity - the likelihood function
@@ -109,10 +109,10 @@ Returns:
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
-                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, stat_only=stat_only, correlated_eff=correlated_eff)
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, nuis_prior=nuis_prior, nuis_correlated=nuis_correlated)
                 else
                     # no events are there for a given partition
-                    total_ll += build_likelihood_zero_obs_evts(part_k, p, correlated_eff=correlated_eff,stat_only=stat_only)
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p,nuis_prior=nuis_prior, nuis_correlated=nuis_correlated)
                 end
             end
             
@@ -133,7 +133,7 @@ end
 ##############################################
 ##############################################
 function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int};
-    best_fit::Bool=false,stat_only=false,bkg_only=false,seed=nothing,correlated_eff=true)
+    best_fit::Bool=false,nuis_prior=true,bkg_only=false,seed=nothing,nuis_correlated=true)
 """
 Generates data from a posterior distribution.y
 This is based on the posterior predictive distributions. 
@@ -156,7 +156,7 @@ Parameters
 Keyword arguments
 -----------------
     - best_fit::Bool where to fix the paramaters to the best fit
-    - stat_only::Bool whether only statistical parameters were included in the posterior
+    - nuis_prior::Bool whether only statistical parameters were included in the posterior
     - bkg_only::Bool where the fit was without signal,
     - seed::Int random seed
 Returns
@@ -186,14 +186,14 @@ Returns
 
         b_name = part_k.bkg_name           
         idx_part_with_events=part_event_index[idx_k]
-        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,correlated_eff=correlated_eff,stat_only=stat_only)
+        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior)
 
         n_s = rand(Poisson(model_s_k))
         n_b = rand(Poisson(model_b_k))
         events =generate_disjoint_uniform_samples(n_b)
         if (bkg_only == false)
             for i in 1:n_s
-                if (stat_only==true || idx_part_with_events==0)
+                if (nuis_prior==false || idx_part_with_events==0)
                     
                     append!(events,rand(Normal(Qbb + part_k.bias, part_k.fwhm/2.355)))
                 else    
@@ -251,20 +251,20 @@ end
 ##############################################
 ##############################################
 ##############################################
-function build_prior(partitions,part_event_index;config,stat_only=false)
+function build_prior(partitions,part_event_index;config,nuis_prior=true)
 """
 Builds the priors for use in the fit
 ----------
 Parameters
     - partitions:Table of the partition info
     - config: the Dict of the fit config
-    - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
+    - nuis_prior; true if we want to include priors for nuisance parameters (bias, res, eff)
 """
 
 
     list_names = partitions.bkg_name
     unique_list=unique(list_names)
-    correlated_eff = config["correlated_eff"]
+    nuis_correlated = config["nuisances"]["correlated"]
 
     bkg_par_names=[Symbol(name) for name in unique_list]
      
@@ -277,10 +277,10 @@ Parameters
         :σ=>[],
         :𝛥=>[])
     
-    if (stat_only==false)
+    if (nuis_prior==true)
         
         # model efficiencies with an alpha parameter (if set to True)
-        if correlated_eff == true # is_alpha IS A LIST! (print)
+        if nuis_correlated == true
             
             @info "...CORRELATED EFF IS TRUE!"
 
@@ -362,19 +362,19 @@ end
 ##############################################
 ##############################################
 ##############################################
-function build_hd_prior(partitions,part_event_index;config,stat_only=false)
+function build_hd_prior(partitions,part_event_index;config,nuis_prior=true)
 """
 [experimental ] builds the priors for use in the fit with a Hierachical structure
 ----------
 Parameters
     - partitions:Table of the partition info
     - config: the Dict of the fit config
-    - stat_only; a bool for whether systematic uncertatinties are considered on energy scale
+    - nuis_prior; true if we want to include priors for nuisance parameters (bias, res, eff)
 """
 
     list_names = partitions.bkg_name
     unique_list=unique(list_names)
-    correlated_eff = true #to be implemented here!
+    nuis_correlated = config["nuisances"]["correlated"]
 
     bkg_par_names=[Symbol(name) for name in unique_list]
 
@@ -387,9 +387,9 @@ Parameters
         :σ=>[],
         :𝛥=>[])
 
-    if (stat_only==false)
+    if (nuis_prior==true)
         
-        if correlated_eff == true
+        if nuis_correlated == true
 
             res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
             bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
