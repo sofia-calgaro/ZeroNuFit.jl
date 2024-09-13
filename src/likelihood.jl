@@ -4,6 +4,7 @@ using BAT, DensityInterface, IntervalSets
 using TypedTables
 using Plots,LaTeXStrings
 using Cuba
+using OrderedCollections
 
 function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;nuis_correlated::Bool=true,nuis_prior::Bool=false)
     """
@@ -135,10 +136,10 @@ end
 function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int};
     best_fit::Bool=false,nuis_prior=true,bkg_only=false,seed=nothing,nuis_correlated=true)
 """
-Generates data from a posterior distribution.y
+Generates data from a posterior distribution.
 This is based on the posterior predictive distributions. 
-Given a model with some parameters `ttheta_i`, the posterior predictive distribution,
-or the distribution of data generated accoridng to the posterior distribution of theta
+Given a model with some parameters `theta_i`, the posterior predictive distribution,
+or the distribution of data generated according to the posterior distribution of theta
 and the likelihood is:
 ```math
 p(y|D) =int p(y|theta)p(theta|D)dtheta
@@ -162,6 +163,7 @@ Keyword arguments
 Returns
     OrderedDict of the data
 """
+    Qbb = 2039.06 # keV
 
     # seed the seed
     output=OrderedDict("events"=>[])
@@ -194,7 +196,6 @@ Returns
         if (bkg_only == false)
             for i in 1:n_s
                 if (nuis_prior==false || idx_part_with_events==0)
-                    
                     append!(events,rand(Normal(Qbb + part_k.bias, part_k.fwhm/2.355)))
                 else    
                     append!(events,rand(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events])))
@@ -216,6 +217,8 @@ Returns
 
     end
     display(output["events"])
+    
+    return output
 
 end
 ##############################################

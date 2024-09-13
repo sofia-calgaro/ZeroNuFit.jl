@@ -7,14 +7,14 @@ include("utils.jl")
 using JSON
 
 export run_analysis
-
+export retrieve_real_fit_results
 
 
 
 
 
 # function to run the unbinned fit
-function run_analysis(config::Dict{String, Any};output_path::String)
+function run_analysis(config::Dict{String, Any};output_path::String, toy_idx::Int)
 """
 Function which handeles running analysis
 Parameters:
@@ -78,18 +78,73 @@ Parameters:
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
         prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config) 
-        generate_data(samples,partitions,part_event_index,best_fit=false,nuis_prior=config["nuisances"]["prior"],bkg_only=false,seed=nothing)
     end
-    
+
+    # let's save
     @info bat_report(samples)
-    
     _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config) 
-    
-   
-    save_outputs(partitions, events, part_event_index, samples, posterior, config,priors=prior,par_names=par_names)
+    save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path, priors=prior,par_names=par_names, toy_idx=toy_idx)
     
     return 
     
 end
 
+
+function retrieve_real_fit_results(config::Dict{String, Any})
+"""
+Function which handeles generating of fake data
+Parameters:
+----------
+    config::Dict{String,Any} the fit configuration
+    output_path::String (keyword) the path to the output files folder
+"""
+
+    @info "You entered into src/ZeroNuFit.jl"
+    
+    @info"Let's retrieve some partitions ..."
+    partitions = nothing
+    first=true
+    @info config["partitions"]
+    for part_path  in config["partitions"]
+
+        part_tmp,fit_groups =get_partitions_new(part_path) 
+        if (first)
+            partitions=part_tmp
+            first=false
+        else
+            partitions=vcat(partitions,part_tmp)
+        end
+    end
+    display(partitions)
+    @info "... load events"
+    events_multi = []
+    for event_path in config["events"]
+        append!(events_multi,[get_events(event_path,partitions)])
+    end
+
+    events=Array{Vector{Float64}}(undef,length(partitions))
+    for i in 1:length(partitions)
+        
+        arr_tmp =Vector{Float64}()
+        for sub in events_multi
+            if (sub[i]!=Float64[])
+                
+                append!(arr_tmp,sub[i])
+                end
+        end
+         
+        events[i]=arr_tmp
+    end
+    @debug events
+
+    @info "get which partitions have events"
+    part_event_index = get_partition_event_index(events,partitions)
+
+    # let's retrieve the old data
+    samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
+
+    return samples, partitions, part_event_index
+
 end 
+
+end
