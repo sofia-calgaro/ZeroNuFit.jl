@@ -50,7 +50,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config)
+function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config,bkg_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
@@ -63,22 +63,22 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     
     corr= config["bkg"]["correlated"]
     if (corr==true)
-        prior,par_names=build_hd_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"])
+        prior,par_names=build_hd_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"],bkg_only=bkg_only)
     else
-        prior,par_names=build_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"])
+        prior,par_names=build_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"],bkg_only=bkg_only)
     end
     @info "built prior"
-
-    if (config["signal"]["prior"]=="sqrt")
-
-        sqrt_prior=true
-        s_max = config["signal"]["upper_bound"]
-    else
-        sqrt_prior=false
-        s_max=nothing
+    
+    sqrt_prior=false
+    s_max=nothing
+    if bkg_only==false
+        if (config["signal"]["prior"]=="sqrt")
+            sqrt_prior=true
+            s_max = config["signal"]["upper_bound"]
+        end
     end
 
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,nuis_prior=nuisances["prior"],nuis_correlated=nuisances["correlated"],sqrt_prior=sqrt_prior,s_max=s_max)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,nuis_prior=nuisances["prior"],nuis_correlated=nuisances["correlated"],sqrt_prior=sqrt_prior,s_max=s_max,bkg_only=bkg_only)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 
@@ -86,11 +86,12 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     return prior,likelihood,posterior,par_names
 end
 
-function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int};config)
+function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int}, config)
 """
 Function to run the fit looping over partitions
 """
-    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config)
+    bkg_only = config["bkg_only"]
+    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,bkg_only=bkg_only)
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])

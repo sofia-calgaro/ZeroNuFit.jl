@@ -14,7 +14,7 @@ export retrieve_real_fit_results
 
 
 # function to run the unbinned fit
-function run_analysis(config::Dict{String, Any};output_path::String, toy_idx::Int)
+function run_analysis(config::Dict{String, Any};output_path::String, toy_idx=nothing)
 """
 Function which handeles running analysis
 Parameters:
@@ -72,7 +72,7 @@ Parameters:
             @info "OVERWRITING THE PREVIOUS FIT!"
         end
 
-        samples,prior,par_names = run_fit_over_partitions(partitions,events,part_event_index,config=config) 
+        samples,prior,par_names = run_fit_over_partitions(partitions,events,part_event_index,config) 
         @info "fit ran succesfully"
     else
         @info "... we load already existing fit results"
@@ -82,7 +82,7 @@ Parameters:
 
     # let's save
     @info bat_report(samples)
-    _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config) 
+    _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,config=config,bkg_only=config["bkg_only"]) 
     save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path, priors=prior,par_names=par_names, toy_idx=toy_idx)
     
     return 

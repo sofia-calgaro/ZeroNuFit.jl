@@ -15,7 +15,7 @@ include("src/ZeroNuFit.jl")
 using .ZeroNuFit
 
 
-function set_logger(config::Dict,output_path::String;toy_idx::Int)
+function set_logger(config::Dict,output_path::String;toy_idx=nothing)
 """
 Function which sets the logging for the program
 Parameters
@@ -104,7 +104,7 @@ function main()
     set_logger(config,output_path)
 
     # Call the analysis function from ZeroNuFit
-    ZeroNuFit.run_analysis(config,output_path=output_path)
+    ZeroNuFit.run_analysis(config,output_path=output_path,toy_idx=nothing)
 
 end
 
