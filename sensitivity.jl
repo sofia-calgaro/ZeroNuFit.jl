@@ -55,7 +55,8 @@ function main()
         JSON3.write(file, fake_data)
     end
 
-    # fit again
+    # fit again (and plot fake data + fit result)
+    config_real_data["plot"]["fit_and_data"] = true
     ZeroNuFit.run_analysis(config_real_data,output_path="$output_path/sensitivity",toy_idx=toy_idx)
         
 end
