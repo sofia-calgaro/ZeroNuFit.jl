@@ -94,7 +94,7 @@ function get_events(event_path,partitions)::Array{Vector{Float64}}
     """
         Get the event info from a jason file and save  to a Table
     """
-    
+        @info event_path
         event_json = JSON.parsefile(event_path,dicttype=DataStructures.OrderedDict)
         events=Array{Vector{Float64}}(undef,length(partitions))
         for (idx,part) in enumerate(partitions)
@@ -152,7 +152,7 @@ Function which saves sampling results
 end
 
 
-function save_results_into_json(samples,posterior,config,output)
+function save_results_into_json(samples,posterior,config,output;toy_idx=nothing)
 """
 Function which saves results from the fit and copies the input config (for any future need)
 """
@@ -197,17 +197,21 @@ Function which saves results from the fit and copies the input config (for any f
 
     json_string = JSON.json(data,4)
     
-    open(joinpath(output,"mcmc_files/fit_results.json"), "w") do file
-        write(file, json_string)
+    if toy_idx == nothing
+        open(joinpath(output,"mcmc_files/fit_results.json"), "w") do file
+            write(file, json_string)
+        end
+    else
+        open(joinpath(output,"mcmc_files/fit_results_$(toy_idx).json"), "w") do file
+            write(file, json_string)
+        end
     end
-
 end
 
-function save_outputs(partitions, events, part_event_index, samples, posterior, config;priors=nothing,par_names=nothing)
+function save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path;priors=nothing,par_names=nothing,toy_idx=nothing)
 """
 Function to plot and save results, as well as inputs
 """
-    output_path = config["output_path"]
     hier = config["bkg"]["correlated"]
     if (config["signal"]["prior"]=="sqrt")
         sqrt_prior=true
@@ -221,31 +225,33 @@ Function to plot and save results, as well as inputs
     @info "... these are the parameters that were included: ", free_pars
     
     @info "... now we save samples (untouched if we do not want to overwrite)"
-    if config["overwrite"]==true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
-
-        save_generated_samples(samples, output_path)
-    @info "...done!"
+    if config["light_output"]==false
+        if config["overwrite"]==true || !isfile(joinpath(config["output_path"],"mcmc_files/samples.h5"))
+            save_generated_samples(samples, output_path)
+        @info "...done!"
+        end
     end
     
     @info "... now we save other useful results + config entries"
-    save_results_into_json(samples, posterior, config, output_path)
+    save_results_into_json(samples, posterior, config, output_path,toy_idx=toy_idx)
     @info "...done!"
 
-    plot_correlation_matrix(samples,output_path,par_names=par_names)
+    if config["light_output"]==false
+        plot_correlation_matrix(samples,output_path,par_names=par_names,toy_idx=toy_idx)
+    end
 
     @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,
-    priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier)
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
 
     @info "plot 2D posterior for some cases"
-    plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names)
+    plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names,toy_idx=toy_idx)
 
 
     @info "...done!"
     
     if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]
         @info "... now we plot fit & data"
-        plot_fit_and_data(partitions, events, part_event_index, samples, free_pars, output_path, config["plot"])
+        plot_fit_and_data(partitions, events, part_event_index, samples, free_pars, output_path, config["plot"], toy_idx=toy_idx)
         @info "...done!"
     end
     
