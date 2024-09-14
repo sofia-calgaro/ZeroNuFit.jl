@@ -1,0 +1,6 @@
+{
+    "path_to_fit": "output/fit_gerda_no_signal/",
+    "best_fit": false, 
+    "low_stat": true,
+    "seed": null
+}
