@@ -192,10 +192,9 @@ function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=n
 
             p=histogram2d(x, y, bins=200, cmap=:batlow, xlabel=par_names[par_x], ylabel=par_names[par_y],
             right_margin = 10Plots.mm)
-            savefig(p,"temp.pdf")
-            
             log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
-            append_pdf!(joinpath(output, "plots/2D_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
+            savefig(p,"temp$log_suffix.pdf")
+            append_pdf!(joinpath(output, "plots/2D_posterior$log_suffix.pdf"), "temp$log_suffix.pdf", cleanup=true)
         end
     end
 
@@ -298,9 +297,9 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 
             end
 
-            savefig(p,"temp.pdf")
             log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
-            append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
+            savefig(p,"temp$log_suffix.pdf")
+            append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp$log_suffix.pdf", cleanup=true)
             ct += 1
             
         # multivariate parameters    
@@ -335,9 +334,9 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 xaxis!(xname)
                 ylims!(0,ylims()[2])
-                savefig(p,"temp.pdf")
                 log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
-                append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp.pdf", cleanup=true)
+                savefig(p,"temp$log_suffix.pdf")
+                append_pdf!(joinpath(output, "plots/marg_posterior$log_suffix.pdf"), "temp$log_suffix.pdf", cleanup=true)
                 ct += 1
             end
         end
