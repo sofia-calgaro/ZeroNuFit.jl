@@ -236,7 +236,9 @@ Function to plot and save results, as well as inputs
     save_results_into_json(samples, posterior, config, output_path,toy_idx=toy_idx)
     @info "...done!"
 
-    plot_correlation_matrix(samples,output_path,par_names=par_names,toy_idx=toy_idx)
+    if config["light_output"]==false
+        plot_correlation_matrix(samples,output_path,par_names=par_names,toy_idx=toy_idx)
+    end
 
     @info "... now we plot marginalized posteriors (and priors)"
     plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
