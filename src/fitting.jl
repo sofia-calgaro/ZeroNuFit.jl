@@ -54,19 +54,17 @@ function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_in
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
-    nuisances = config["nuisances"] 
-    
+    settings=get_settings(config)
+
     # check if the key 'correlated' exists
     if !haskey(config["bkg"], "correlated")
         throw(ArgumentError("Key 'correlated' not found for the background parameter in the configuration JSON! Exit here"))
     end
     
     corr= config["bkg"]["correlated"]
-    if (corr==true)
-        prior,par_names=build_hd_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"],bkg_only=bkg_only)
-    else
-        prior,par_names=build_prior(partitions,part_event_index,config=config,nuis_prior=nuisances["prior"],bkg_only=bkg_only)
-    end
+    
+    prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr)
+    
     @info "built prior"
     
     sqrt_prior=false
@@ -77,14 +75,14 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
             s_max = config["signal"]["upper_bound"]
         end
     end
-
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,nuis_prior=nuisances["prior"],nuis_correlated=nuisances["correlated"],sqrt_prior=sqrt_prior,s_max=s_max,bkg_only=bkg_only)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
     return prior,likelihood,posterior,par_names
 end
+
 
 function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int}, config)
 """
