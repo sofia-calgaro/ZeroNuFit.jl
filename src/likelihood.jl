@@ -129,7 +129,7 @@ end
 
 
 
-function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool)
+function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Float64)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -422,7 +422,8 @@ Parameters
         hd = BAT.HierarchicalDistribution(
             v -> begin 
             dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-            BAT.NamedTupleDist(;dict...)
+            println(dict)
+            BAT.NamedTupleDist(a=0..1;dict...)
             end,
             BAT.NamedTupleDist(;priors...)
             )
