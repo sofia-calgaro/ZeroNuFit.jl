@@ -15,6 +15,18 @@ using FileIO
 import JLD2
 import HDF5
 
+function get_settings(config)
+
+    settings=Dict()
+    settings[:energy_scale_fixed]=config["nuisance"]["energy_scale"]["fixed"]
+    settings[:energy_scale_correlated]=config["nuisance"]["energy_scale"]["correlated"]
+    settings[:eff_fixed]=config["nuisance"]["efficiency"]["fixed"]
+    settings[:eff_correlated]=config["nuisance"]["efficiency"]["correlated"]
+    settings[:bkg_only]=config["bkg_only"]
+
+    return settings
+end
+
 function get_partitions_new(part_path::String)
     """
     Get the partition info from a JSON file and save to a Table
@@ -33,6 +45,10 @@ function get_partitions_new(part_path::String)
         end
         arrays["fit_group"]=[]
         arrays["bkg_par_name"]=[]
+        arrays["eff_par_name"]=[]
+        arrays["energy_reso_name"]=[]
+        arrays["energy_bias_name"]=[]
+
 
         for fit_group in keys(part_data_json["partitions"])
             
@@ -42,6 +58,23 @@ function get_partitions_new(part_path::String)
                     end
                 append!(arrays["fit_group"],[fit_group])
                 append!(arrays["bkg_par_name"],[Symbol(part_data_json["fit_groups"][fit_group]["bkg_name"])])
+                
+                ## defaults to 'all'
+                if (haskey("efficiency_group_name",part_data_json["fit_groups"][fit_group]))
+                    append!(arrays["eff_par_name"],["αe_"*Symbol(part_data_json["fit_groups"][fit_group]["efficiency_group_name"])])
+                else
+                    append!(arrays["eff_par_name"],[:αe_all])
+                end
+
+                if (haskey("energy_scale_group_name",part_data_json["fit_groups"][fit_group]))
+                    append!(arrays["energy_reso_name"],[Symbol("αr_"*part_data_json["fit_groups"][fit_group]["energy_scale_group_name"])])
+                    append!(arrays["energy_bias_name"],[Symbol("αb_"*part_data_json["fit_groups"][fit_group]["energy_scale_group_name"])])
+
+                else
+                    append!(arrays["energy_reso_name"],[:αr_all])
+                    append!(arrays["energy_bias_name"],[:αb_all])
+
+                end
         
             end
 
@@ -50,6 +83,9 @@ function get_partitions_new(part_path::String)
         tab = Table(experiment=Array(arrays["experiment"]),
                     fit_group=Array(arrays["fit_group"]),
                     bkg_name = Array(arrays["bkg_par_name"]),
+                    energy_reso_name = Array(arrays["energy_reso_name"]),
+                    energy_bias_name = Array(arrays["energy_bias_name"]),
+                    eff_name = Array(arrays["eff_par_name"]),
                     detector=Array(arrays["detector"]),
                     part_name=Array(arrays["part_name"]),
                     start_ts=Array(arrays["start_ts"]),
