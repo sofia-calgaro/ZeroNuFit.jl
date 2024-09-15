@@ -34,7 +34,9 @@ function main()
     # we add/overwrite an option for light saving
     config_real_data["light_output"] = true
 
-    for dir in ["$output_path/sensitivity","$output_path/sensitivity/fake_data/","$output_path/sensitivity/plots/","$output_path/sensitivity/mcmc_files/","$output_path/sensitivity/logs/"]
+    for dir in ["$output_path/sensitivity","$output_path/sensitivity/fake_data/",
+                "$output_path/sensitivity/plots/","$output_path/sensitivity/mcmc_files/",
+                "$output_path/sensitivity/logs/"]
         if !isdir(dir)
             mkpath(dir)
         end
@@ -46,7 +48,8 @@ function main()
     samples, partitions, part_event_index = retrieve_real_fit_results(config_real_data)
     
     # now let's generate and fit data! How many times? As N_toys
-    fake_data = generate_data(samples,partitions,part_event_index,best_fit=config["best_fit"],nuis_prior=config_real_data["nuisances"]["prior"],bkg_only=config_real_data["bkg_only"],seed=config["seed"])
+    settings=get_settings(config_real_data)
+    fake_data = generate_data(samples,partitions,part_event_index,settings,best_fit=config["best_fit"],seed=config["seed"])
 
     # define a new path for the events (where we will save everything)
     config_real_data["events"] = ["$output_path/sensitivity/fake_data/fake_data$toy_idx.json"]
