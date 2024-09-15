@@ -343,6 +343,7 @@ Parameters
         unique_list=unique(list_names)
         for name in unique_list
             priors[Symbol(name)]=Truncated(Normal(0,1),α_min,Inf)
+            pretty_names[Symbol(name)]=L"\alpha_{\varepsilon}"*split(name,"_")[2]
         end
       
     else
@@ -374,13 +375,18 @@ Parameters
         unique_list=unique(list_names)
         for name in unique_list
             priors[Symbol(name)]=Truncated(Normal(0,1),αr_min,Inf)
+            pretty_names[Symbol(name)]=L"\alpha_{r}"*split(name,"_")[2]
+
         end
 
         list_names = partitions.energy_bias_name
         unique_list=unique(list_names)
         for name in unique_list
             priors[Symbol(name)]=Truncated(Normal(0,1),-Inf,Inf)
+            pretty_names[Symbol(name)]=L"\alpha_{b}"*split(name,"_")[2]
+
         end
+
     else
         res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
         bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
