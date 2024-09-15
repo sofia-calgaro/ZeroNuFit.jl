@@ -57,8 +57,12 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,s
         eff =part_k.eff_tot
     end
 
-    model_s_k = log(2) * N_A * part_k.exposure * (eff) * (p.S*sig_units) / m_76
-
+    if (settings[:bkg_only]==false)
+        model_s_k = log(2) * N_A * part_k.exposure * (eff) * (p.S*sig_units) / m_76
+    else
+        model_s_k=0
+    end
+    
     b_name = part_k.bkg_name
     model_b_k = deltaE * part_k.exposure * p[b_name]
 
@@ -129,7 +133,7 @@ end
 
 
 
-function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Float64)
+function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Union{Float64,Nothing})
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
