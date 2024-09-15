@@ -285,9 +285,11 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                     else
                         for i in 1:50
                             rando=rand(priors.pdist)
-                            rando = samples.v[i]
+                            distribution = Categorical(samples.weight/sum(samples.weight))
+                            random_index = rand(distribution)
+                            rando = samples.v[random_index]
                             y=pdf(priors.f(rando)[par],x)
-                            maxi = maximum(maximum(y),maxi)
+                            maxi = maximum([maximum(y),maxi])
                             color="grey"
                             
                             plot!(x,y,color="grey",alpha=0.3,label=nothing)
@@ -331,7 +333,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                     elseif (hier==true)
                         rando=rand(priors.pdist)
                         rando = samples.v[1]
-                        y=pdf(priors.f(rando)[par][idx],x)
+                        y=pdf(priors.f(rando)[par].v[idx],x)
                     else                       
                         y=pdf(priors[par].v[idx],x)
                     end
