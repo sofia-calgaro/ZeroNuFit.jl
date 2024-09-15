@@ -72,10 +72,10 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     if bkg_only==false
         if (config["signal"]["prior"]=="sqrt")
             sqrt_prior=true
-            s_max = config["signal"]["upper_bound"]
+            s_max = Float64(config["signal"]["upper_bound"])
         end
     end
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,Float64(s_max))
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,s_max)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 
