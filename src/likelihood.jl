@@ -415,6 +415,10 @@ Parameters
 
         return distprod(;priors...),pretty_names
     else
+        priors[:B]=distrB
+        ## uniform prior in [0,1] for sigmaB (to be chekced)
+        priors[:σB]=0..1
+
         hd = BAT.HierarchicalDistribution(
             v -> begin 
             dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
