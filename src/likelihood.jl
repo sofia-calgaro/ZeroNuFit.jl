@@ -6,7 +6,31 @@ using Plots,LaTeXStrings
 using Cuba
 using OrderedCollections
 
-function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;nuis_correlated::Bool=true,nuis_prior::Bool=false,bkg_only::Bool=false)
+
+function get_energy_scale_pars(part_k::NamedTuple,p::NamedTuple,settings::Dict,idx_part_with_events)
+    """ 
+    Get the resolution and bias
+    """
+    if (settings[:energy_scale_fixed]==true || idx_part_with_events==0)
+        reso = part_k.fwhm/2.355
+        bias =part_k.bias
+
+    elseif (settings[:energy_scale_correlated]==true)
+        energy_reso_group = part_k.energy_reso_name
+        energy_bias_group = part_k.energy_bias_name
+        reso = part_k.fwhm/2.355+p[energy_reso_group]*part_k.fwhm_sigma/2.355
+        bias = part_k.bias+p[energy_bias_group]*part_k.bias_sigma
+        
+    else
+        reso = p.σ[idx_part_with_events]
+        bias =p.𝛥[idx_part_with_events]
+    end
+
+return reso,bias
+
+end
+
+function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,settings::Dict)
     """
     Get the expected number of signal and background counts in a partition
     """
@@ -14,34 +38,41 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int;n
     m_76 = 75.92E-3 # kg/mol
     deltaE = 240 # keV
     sig_units =1e-27 # signal is in units of this
-    b_name = part_k.bkg_name
+    eff= nothing
 
-    model_s_k = 0
-    if bkg_only==false
-        if nuis_correlated == true
-            model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
-        # we remove alpha and uncertainties
-        else
-            if (idx_part_with_events!=0 || nuis_prior==true)
-                model_s_k = log(2) * N_A * part_k.exposure * p.ε[idx_part_with_events] * (p.S*sig_units) / m_76
-            else
-                model_s_k = log(2) * N_A * part_k.exposure * part_k.eff_tot * (p.S*sig_units) / m_76
-            end
-        end
+    # logic for efficiency it can be either correlated, uncorrelated or fixed
+    if settings[:bkg_only]==true 
+        eff =0
+
+    elseif (settings[:eff_correlated] == true)
+        eff_group = part_k.eff_name
+        eff = part_k.eff_tot + p[eff_group] * part_k.eff_tot_sigma
+
+    elseif (idx_part_with_events!=0 && 
+            settings[:eff_correlated]==false &&
+            settings[:eff_fixed]==false)
+
+        eff =p.ε[idx_part_with_events] 
+    else 
+        eff =part_k.eff_tot
     end
+
+    model_s_k = log(2) * N_A * part_k.exposure * (eff) * (p.S*sig_units) / m_76
+
+    b_name = part_k.bkg_name
     model_b_k = deltaE * part_k.exposure * p[b_name]
 
     return model_s_k,model_b_k
 end
 
-function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple;nuis_prior::Bool=false, nuis_correlated::Bool=true, bkg_only::Bool=false)
-"""
-Function to calculate the partial likelihood for a partition with 0 events
-    
-"""
+
+function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple,settings::Dict)
+    """
+    Function to calculate the partial likelihood for a partition with 0 events
+    """
 
     ll_value = 0
-    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
+    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,settings)
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -49,8 +80,9 @@ Function to calculate the partial likelihood for a partition with 0 events
     return ll_value
 end
 
-function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, p::NamedTuple;
-                                        nuis_prior::Bool=false, nuis_correlated::Bool=true, bkg_only::Bool=false)
+
+function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, 
+    p::NamedTuple,settings::Dict)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -60,7 +92,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
 
-    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
+    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,settings)
    
     model_tot_k = model_b_k + model_s_k
     
@@ -73,25 +105,31 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value += logpdf(Poisson(λ), length(events_k))
 
-    if bkg_only==false
-        for evt_energy in events_k
-            term1 = model_b_k / deltaE # background
 
-            if (nuis_prior==false)
-                term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), evt_energy) # signal (fixed nuisance)
-            else
-                term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events]), evt_energy) # signal (free nuisance)
-            end
-            ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
+    
+    for evt_energy in events_k
+
+        term1 = model_b_k / deltaE # background
+
+        if (settings[:bkg_only]==false)
+
+            # get the correct reso and bias (
+            reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
+            term2 = model_s_k * pdf(Normal(Qbb + bias, reso), evt_energy) 
+        else
+            term2 =0
         end
+        
+        ll_value += log( (term1 + term2)+eps(term1+term2)) - log(model_tot_k+eps(model_tot_k)) 
+    
     end
     
     return ll_value
 end
 
-# Tuple{Real, Real, Vector{Real}, Vector{Real}}
-function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int};
-                                            nuis_prior=true,nuis_correlated=true,sqrt_prior=false,s_max=nothing,bkg_only=false)
+
+
+function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -111,10 +149,10 @@ Returns:
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
-                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, nuis_prior=nuis_prior, nuis_correlated=nuis_correlated, bkg_only=bkg_only)
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, settings)
                 else
                     # no events are there for a given partition
-                    total_ll += build_likelihood_zero_obs_evts(part_k, p,nuis_prior=nuis_prior, nuis_correlated=nuis_correlated, bkg_only=bkg_only)
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p,settings)
                 end
             end
             
@@ -131,11 +169,9 @@ end
 
 
 
-##############################################
-##############################################
-##############################################
-function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int};
-    best_fit::Bool=false,nuis_prior=true,bkg_only=false,seed=nothing,nuis_correlated=true)
+
+function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int},settings::Dict;
+    best_fit::Bool=false,seed=nothing,bkg_only=false)
 """
 Generates data from a posterior distribution.
 This is based on the posterior predictive distributions. 
@@ -182,6 +218,7 @@ Returns
         random_index = rand(distribution)
         p = samples.v[random_index]
     end
+
     # create the array to fill
     events=[]
 
@@ -189,18 +226,18 @@ Returns
 
         b_name = part_k.bkg_name           
         idx_part_with_events=part_event_index[idx_k]
-        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,nuis_correlated=nuis_correlated,nuis_prior=nuis_prior,bkg_only=bkg_only)
+        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,settings)
 
         n_s = rand(Poisson(model_s_k))
         n_b = rand(Poisson(model_b_k))
         events =generate_disjoint_uniform_samples(n_b)
         if (bkg_only == false)
             for i in 1:n_s
-                if (nuis_prior==false || idx_part_with_events==0)
-                    append!(events,rand(Normal(Qbb + part_k.bias, part_k.fwhm/2.355)))
-                else    
-                    append!(events,rand(Normal(Qbb + p.𝛥[idx_part_with_events], p.σ[idx_part_with_events])))
-                end
+
+                reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
+
+                append!(events,rand(Normal(Qbb + bias, reso)))
+                
         
             end
         end
@@ -222,9 +259,9 @@ Returns
     return output
 
 end
-##############################################
-##############################################
-##############################################
+
+
+
 function get_signal_bkg_priors(config)
 """
 Defines specific priors for signal and background contributions
@@ -252,10 +289,8 @@ Parameters
     return distrS, distrB
 end
 
-##############################################
-##############################################
-##############################################
-function build_prior(partitions,part_event_index;config,nuis_prior=true,bkg_only=false)
+
+function build_prior(partitions,part_event_index,config,settings::Dict;hierachical=false)
 """
 Builds the priors for use in the fit
 ----------
@@ -268,269 +303,123 @@ Parameters
 
     list_names = partitions.bkg_name
     unique_list=unique(list_names)
-    nuis_correlated = config["nuisances"]["correlated"]
-
     bkg_par_names=[Symbol(name) for name in unique_list]
      
     distrS, distrB = get_signal_bkg_priors(config)
     distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
 
     pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
-        :α=>L"\alpha",
+        :α=>L"\alpha_{\varepsilon}",
+        :αr=>L"\alpha_{r}",
+        :αb=>L"\alpha_{b}",
         :ε=>[],
         :σ=>[],
         :𝛥=>[])
-    
-    if (nuis_prior==true)
-        
-        # model efficiencies with an alpha parameter (if set to True)
-        if nuis_correlated == true
-            
-            @info "...CORRELATED EFF IS TRUE!"
 
-            res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-
-            for (idx,part) in enumerate(partitions)
-
-                if (part_event_index[idx]!=0)
-                    i_new = part_event_index[idx]
-                    res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-                    bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
-                    long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
-                    append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
-                    append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
-                end
-            end
-
-            # make some nice names for plotting
-            for key in keys(distrB_multi)
-                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
-            end
-
-            # get the minimum for α not to have negative values later on
-            all_eff_tot = partitions.eff_tot
-            all_eff_tot_sigma = partitions.eff_tot_sigma
-            ratio = - all_eff_tot ./ all_eff_tot_sigma 
-            α_min = maximum(ratio)
-            
-            if bkg_only==false
-                return distprod(S=distrS,;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
-            else
-                return distprod(;distrB_multi..., α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias),pretty_names
-            end
-            
-        else
-            
-            @info "...CORRELATED EFF IS FALSE!"
-
-            res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            eff=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-
-            for (idx,part) in enumerate(partitions)
-
-                if (part_event_index[idx]!=0)
-                    i_new = part_event_index[idx]
-                    res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-                    bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
-                    eff[i_new] =Truncated(Normal(part.eff_tot,part.eff_tot_sigma),0,1)
-                    long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
-                    append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
-                    append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
-                    append!(pretty_names[:ε],["Efficiency "*L"(\varepsilon)"*" - "*long_name*""])
-                end
-            end
-
-            # make some nice names for plotting
-            for key in keys(distrB_multi)
-                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
-            end
-            
-            if bkg_only==false
-                return distprod(S=distrS,;distrB_multi..., ε=eff, σ=res, 𝛥=bias),pretty_names
-            else
-                return distprod(;distrB_multi..., ε=eff, σ=res, 𝛥=bias),pretty_names
-            end
-        end
-        
-    
-    else 
-
-        # simpler for a stat only fit
-        pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"))
-        for key in keys(distrB_multi)
-            append!(pretty_names[key],[string(key)*" [cts/keV/kg/yr]"])
-        end
-
-        distprod(S=distS;distrB_multi...),
-        Dict(:S=>L"S [10^{-27} \text{yr^{-1}}]",:B=>"B [cts/keV/kg/yr]")
-
+    for key in keys(distrB_multi)
+        pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
     end
     
-end
 
+    # create priors one by one
 
-##############################################
-##############################################
-##############################################
-function build_hd_prior(partitions,part_event_index;config,nuis_prior=true,bkg_only=false)
-"""
-[experimental ] builds the priors for use in the fit with a Hierachical structure
-----------
-Parameters
-    - partitions:Table of the partition info
-    - config: the Dict of the fit config
-    - nuis_prior; true if we want to include priors for nuisance parameters (bias, res, eff)
-"""
+    ### SIGNAL PRIOR
+    
+    priors=OrderedDict()
+    if (settings[:bkg_only]==false)
+        priors[:S] =distrS
+    end
 
-    list_names = partitions.bkg_name
-    unique_list=unique(list_names)
-    nuis_correlated = config["nuisances"]["correlated"]
+    ### EFF prior
 
-    bkg_par_names=[Symbol(name) for name in unique_list]
+    if (settings[:eff_fixed]==false  && settings[:eff_correlated]==true)
 
-    distrS, distrB = get_signal_bkg_priors(config)
-    distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
+        all_eff_tot = partitions.eff_tot
+        all_eff_tot_sigma = partitions.eff_tot_sigma
+        ratio = - all_eff_tot ./ all_eff_tot_sigma 
+        α_min = maximum(ratio)
 
-    pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
-        :α=>L"\alpha",
-        :ε=>[],
-        :σ=>[],
-        :𝛥=>[])
+        list_names = partitions.eff_name
+        unique_list=unique(list_names)
+        for name in unique_list
+            priors[Symbol(name)]=Truncated(Normal(0,1),α_min,Inf)
+        end
+      
+    else
+        eff=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+    
 
-    if (nuis_prior==true)
-        
-        if nuis_correlated == true
+        for (idx,part) in enumerate(partitions)
 
-            res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-
-            for (idx,part) in enumerate(partitions)
-
-                if (part_event_index[idx]!=0)
-                    i_new = part_event_index[idx]
-                    res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-                    bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
-                    long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
-                    append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
-                    append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
-
-                end
+            if (part_event_index[idx]!=0)
+                i_new = part_event_index[idx]
+                
+                eff[i_new] =Truncated(Normal(part.eff_tot,part.eff_tot_sigma),0,1)
+                long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
+                append!(pretty_names[:ε],["Efficiency "*L"(\varepsilon)"*" - "*long_name*""])
             end
-            # get the minimum for α not to have negative values later on
-            all_eff_tot = partitions.eff_tot
-            all_eff_tot_sigma = partitions.eff_tot_sigma
-            ratio = - all_eff_tot ./ all_eff_tot_sigma 
-            α_min = maximum(ratio)
+        end
+        priors[:ε]=eff
+    end
 
+    ### ENERGY scale prior
 
-            # make some nice names for plotting
-            for key in keys(distrB_multi)
-                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
-            end
+    if (settings[:energy_scale_fixed]==false && settings[:energy_scale_correlated]==true)
+        all_fwhm = partitions.fwhm
+        all_fwhm_sigma = partitions.fwhm_sigma
+        ratio = - all_fwhm ./ all_fwhm_sigma 
+        αr_min = maximum(ratio)
 
-            dis_B = distprod
-            if bkg_only==false
-                hd = BAT.HierarchicalDistribution(
-                        v -> begin 
-                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                        BAT.NamedTupleDist(;dict...)
-                        end,
-                        BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
-                        , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
-                        )
-                ) 
-            else
-                hd = BAT.HierarchicalDistribution(
-                        v -> begin 
-                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                        BAT.NamedTupleDist(;dict...)
-                        end,
-                        BAT.NamedTupleDist(B=distrB,σB=0..1
-                        , α=Truncated(Normal(0,1),α_min,Inf), σ=res, 𝛥=bias
-                        )
-                ) 
-            end
-            pretty_names[:B]="B [cts/keV/kg/yr]"
-            pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
-        else
-
-            res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-            aff=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
-
-            for (idx,part) in enumerate(partitions)
-
-                if (part_event_index[idx]!=0)
-                    i_new = part_event_index[idx]
-                    res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
-                    bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
-                    eff[i_new] =Truncated(Normal(part.eff_tot,part.eff_tot_sigma),0,1)
-                    long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
-                    append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
-                    append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
-                    append!(pretty_names[:ε],["Efficiency "*L"(\varepsilon)"*" - "*long_name*""])
-                end
-            end
-
-            # make some nice names for plotting
-            for key in keys(distrB_multi)
-                pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
-            end
-
-            dis_B = distprod
-            if bkg_only==false
-                hd = BAT.HierarchicalDistribution(
-                        v -> begin 
-                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                        BAT.NamedTupleDist(;dict...)
-                        end,
-                        BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
-                        , ε=eff, σ=res, 𝛥=bias
-                        )
-                ) 
-            else
-                hd = BAT.HierarchicalDistribution(
-                        v -> begin 
-                        dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                        BAT.NamedTupleDist(;dict...)
-                        end,
-                        BAT.NamedTupleDist(B=distrB,σB=0..1
-                        , ε=eff, σ=res, 𝛥=bias
-                        )
-                ) 
-            end
-            pretty_names[:B]="B [cts/keV/kg/yr]"
-            pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
-            
+        list_names = partitions.energy_reso_name
+        unique_list=unique(list_names)
+        for name in unique_list
+            priors[Symbol(name)]=Truncated(Normal(0,1),αr_min,Inf)
         end
 
-        return hd,pretty_names
+        list_names = partitions.energy_bias_name
+        unique_list=unique(list_names)
+        for name in unique_list
+            priors[Symbol(name)]=Truncated(Normal(0,1),-Inf,Inf)
+        end
+    else
+        res=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
+        bias=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
 
+        for (idx,part) in enumerate(partitions)
 
-    else 
+            if (part_event_index[idx]!=0)
+                i_new = part_event_index[idx]
+                res[i_new]=Truncated(Normal(part.fwhm/2.355,part.fwhm_sigma/2.355),0,Inf)
+                bias[i_new] =Truncated(Normal(part.bias,part.bias_sigma),-Inf,Inf)
+                long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
+                append!(pretty_names[:σ],["Energy Resolution "*L"(\sigma)"*" "*long_name*" [keV]"])
+                append!(pretty_names[:𝛥],["Energy Scale Bias "*L"(\Delta)"*" - "*long_name*" [keV]"])
+            end
+        end
+        priors[:σ]=res
+        priors[:𝛥]=bias
 
-        for key in keys(distrB_multi)
-            pretty_names[key]=string(key)*" [cts/keV/kg/yr]"
+    end
+
+    ## BKG prior
+    if (hierachical==false)
+        for (key,item) in distrB_multi
+            priors[key]=item
         end
 
-        dis_B = distprod
+        return distprod(;priors...),pretty_names
+    else
         hd = BAT.HierarchicalDistribution(
-                v -> begin 
-                dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-                BAT.NamedTupleDist(;dict...)
-                end,
-                BAT.NamedTupleDist(S=distrS,B=distrB,σB=0..1
-                )
-        )          
+            v -> begin 
+            dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+            BAT.NamedTupleDist(;dict...)
+            end,
+            BAT.NamedTupleDist(;priors...)
+            )
         pretty_names[:B]="B [cts/keV/kg/yr]"
         pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
-
-
         return hd,pretty_names
-
     end
-
 end
+
 
