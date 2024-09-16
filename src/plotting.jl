@@ -266,7 +266,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             ylims!(0,ylims()[2])
             
             x=range(mini, stop=maximum(post), length=1000)
-
+            maxi=ylims()[2]
             # plot prior
             if priors!=nothing
                 if (par==:S && sqrt_prior)
@@ -285,11 +285,15 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                     else
                         for i in 1:50
                             rando=rand(priors.pdist)
-                            rando = samples.v[i]
+                            distribution = Categorical(samples.weight/sum(samples.weight))
+                            random_index = rand(distribution)
+                            rando = samples.v[random_index]
                             y=pdf(priors.f(rando)[par],x)
+                            maxi = maximum([maximum(y),maxi])
                             color="grey"
                             
                             plot!(x,y,color="grey",alpha=0.3,label=nothing)
+                            ylims!(0,maxi)
 
                         end
                     end
@@ -324,8 +328,12 @@ Function to plot 1D and 2D marginalized distributions (and priors)
 
                 if priors!=nothing
                     
-                    if (hier==true)
+                    if (hier==true && haskey(priors.pdist,par))
                         y=pdf(priors.pdist[par].v[idx],x)
+                    elseif (hier==true)
+                        rando=rand(priors.pdist)
+                        rando = samples.v[1]
+                        y=pdf(priors.f(rando)[par].v[idx],x)
                     else                       
                         y=pdf(priors[par].v[idx],x)
                     end
