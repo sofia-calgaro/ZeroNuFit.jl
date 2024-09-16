@@ -6,31 +6,68 @@ using Cuba
 
 include("likelihood.jl")
 
-# we need to define some building blocks
-#TODO: move to config
-center = 1930
-range_l = [1930, 2109, 2124]
-range_h = [2099, 2114, 2190]
 
-##############################################
-##############################################
-##############################################
-function norm_uniform(slope::Real,x::Real)
-"""
-Normalised linear function defined by (1+slope*(x-center)/260)/norm.
-Parameters
-----------
-    - slope::Real, the slope of the background
-    - x::Real,     the x value to evaluate at
-"""
-    norm = sum(range_h .- range_l) * (1 - slope * center / 260) + slope * sum(range_h .^ 2 .- range_l .^ 2) / (2 * 260)
-    (1+slope*(x-center)/260)/norm
+
+function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol)
+    """
+    Normalised linear function defined by (1+slope*(x-center)/260)/norm.
+    Parameters
+    ----------
+        - slope::Real, the slope of the background
+        - x::Real,     the x value to evaluate at
+    """
+        center = 1930
+        range_l = [1930, 2109, 2124]
+        range_h = [2099, 2114, 2190]
+        sum_range = sum(range_h .- range_l)
+        sum_range_sq =sum(range_h .^ 2 .- range_l .^ 2)
+        slope = p[Symbol(string(b_name)*"_slope")]
+  
+        norm = sum_range * (1 - slope * center / 260) + slope * sum_range_sq / (2 * 260)
+     
+        return (1+slope*(x-center)/260)/norm
+    end
+
+
+
+function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol)
+    """
+    Normalised linear function defined by (1+slope*(x-center)/260)/norm.
+    Parameters
+    ----------
+        - x::Real,     the x value to evaluate at
+    """    
+    center = 1930
+    range_l = [1930, 2109, 2124]
+    range_h = [2099, 2114, 2190]
+
+    norm =sum(range_h .- range_l)
+    return 1/norm
+ 
+
+end
+ 
+function exponential(x::Float64,p::NamedTuple,b_name::Symbol)
+        """
+        Normalised linear function defined by (1+slope*(x-center)/260)/norm.
+        Parameters
+        ----------
+            - slope::Real, the slope of the background
+            - x::Real,     the x value to evaluate at
+        """
+        center = 1930
+        range_l = [1930, 2109, 2124]
+        range_h = [2099, 2114, 2190]
+
+        # could be made faster?
+        R = p[Symbol(string(b_name)*"_slope")]
+
+        norm = sum(exp.(R*(center-range_l))/R)-sum(exp.(R*(center-range_h))/R)
+
+        return exp(-(x-center)*R)/norm
 end
 
 
-##############################################
-##############################################
-##############################################
 function norm_gauss(sigma::Real,mu::Real,x::Real)
 """
 Normalised gaussian function
@@ -62,9 +99,20 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     end
     
     corr= config["bkg"]["correlated"]
+    bkg_shape=:uniform
+    bkg_shape_pars=nothing
+
+    if (haskey(config["bkg"],"shape"))
+        bkg_shape = Symbol(config["bkg"]["shape"]["name"])
+        if (haskey(config["bkg"]["shape"],"pars"))
+            bkg_shape_pars=config["bkg"]["shape"]["pars"]
+        end
+    end
+        
     
-    prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr)
-    
+    prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr,
+                            bkg_shape=bkg_shape,shape_pars=bkg_shape_pars)
+    @info "using a ",bkg_shape," bkg with ",bkg_shape_pars," parameters"
     @info "built prior"
     
     sqrt_prior=false
@@ -75,7 +123,8 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
             s_max = Float64(config["signal"]["upper_bound"])
         end
     end
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,s_max)
+   
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,s_max,bkg_shape=bkg_shape)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 

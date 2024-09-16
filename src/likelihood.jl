@@ -7,6 +7,17 @@ using Cuba
 using OrderedCollections
 
 
+
+function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name::Symbol)
+    
+    if (bkg_shape==:uniform)
+        return norm_uniform(evt_energy,p,b_name)
+    elseif (bkg_shape==:linear)
+        return norm_linear(evt_energy,p,b_name)
+    elseif (bkg_shape==:expo)
+        return norm_exponential(evt_energy,p,b_name)
+    end
+end
 function get_energy_scale_pars(part_k::NamedTuple,p::NamedTuple,settings::Dict,idx_part_with_events)
     """ 
     Get the resolution and bias
@@ -38,6 +49,7 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,s
     m_76 = 75.92E-3 # kg/mol
     deltaE = 240 # keV
     sig_units =1e-27 # signal is in units of this
+
     eff= nothing
 
     # logic for efficiency it can be either correlated, uncorrelated or fixed
@@ -86,7 +98,7 @@ end
 
 
 function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, 
-    p::NamedTuple,settings::Dict)
+    p::NamedTuple,settings::Dict,bkg_shape::Symbol)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -112,8 +124,8 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     
     for evt_energy in events_k
-
-        term1 = model_b_k / deltaE # background
+      
+        term1 = model_b_k * get_bkg_pdf(bkg_shape,evt_energy,p, part_k.bkg_name )
 
         if (settings[:bkg_only]==false)
 
@@ -133,7 +145,8 @@ end
 
 
 
-function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Union{Float64,Nothing})
+function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},
+    part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Union{Float64,Nothing};bkg_shape::Symbol=:uniform)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -153,7 +166,7 @@ Returns:
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
-                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, settings)
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, settings,bkg_shape)
                 else
                     # no events are there for a given partition
                     total_ll += build_likelihood_zero_obs_evts(part_k, p,settings)
@@ -293,8 +306,7 @@ Parameters
     return distrS, distrB
 end
 
-
-function build_prior(partitions,part_event_index,config,settings::Dict;hierachical=false)
+function build_prior(partitions,part_event_index,config,settings::Dict;hierachical=false,bkg_shape=:uniform,shape_pars=nothing)
 """
 Builds the priors for use in the fit
 ----------
@@ -304,13 +316,15 @@ Parameters
     - nuis_prior; true if we want to include priors for nuisance parameters (bias, res, eff)
 """
 
-
+    # bkg indexs
     list_names = partitions.bkg_name
     unique_list=unique(list_names)
-    bkg_par_names=[Symbol(name) for name in unique_list]
-     
+    bkg_names=[Symbol(name) for name in unique_list]
+    
+   
+
     distrS, distrB = get_signal_bkg_priors(config)
-    distrB_multi=Dict(Symbol(bkg_par_name)=>distrB for bkg_par_name in bkg_par_names)
+    distrB_multi=Dict(Symbol(bkg_name)=>distrB for bkg_name in bkg_names)
 
     pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
         :α=>L"\alpha_{\varepsilon}",
@@ -326,7 +340,6 @@ Parameters
     
 
     # create priors one by one
-
     ### SIGNAL PRIOR
     
     priors=OrderedDict()
@@ -409,6 +422,22 @@ Parameters
         priors[:σ]=res
         priors[:𝛥]=bias
 
+    end
+
+    ## bkg shape priors
+    if shape_pars!=nothing
+        
+        for par in keys(shape_pars)
+            name = par
+            prior = shape_pars[par]
+          
+            for bkg_name in bkg_names
+                priors[Symbol(string(bkg_name)*"_"*name)]=Uniform(prior[1],prior[2])
+                pretty_names[Symbol(string(bkg_name)*"_"*name)]=string(bkg_name)*"_"*name
+            end
+
+        end
+    
     end
 
     ## BKG prior
