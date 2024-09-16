@@ -47,7 +47,7 @@ function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol)
 
 end
  
-function exponential(x::Float64,p::NamedTuple,b_name::Symbol)
+function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)
         """
         Normalised linear function defined by (1+slope*(x-center)/260)/norm.
         Parameters
