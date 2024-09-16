@@ -44,7 +44,7 @@ Before running the code, set the input config.json file with following entries:
     "bkg_only": false,
     "signal": {"upper_bound":1000, "prior": "uniform"},
     "bkg": {"upper_bound":0.1, "prior": "uniform", "correlated": true},
-    "nuisances": {"prior": true, "correlated": true}
+    ...
 }
 ```
 
@@ -58,8 +58,38 @@ where
 - `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances;
 - `"bkg_only": true` if we fit assuming no signal (S=0), false otherwise;
 - `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...);
-- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`);
-- `"nuisances"`: set `"prior": true` if you want to include a prior for nuisance parameters (res, bias, eff.) and `"correlated": true` if you want to use one variable to correlate the nuisance parameters (eg to speed up the computation times).
+- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) and if you want to use a hierarchical model for correlations (`"correlated": true`).
+
+Moreover, the config requires the following block for nuisance parameters, ie energy scale (=energy bias and resolution) and efficiency:
+```
+    {
+    ...
+    "nuisance": { 
+        "energy_scale" : {
+            "correlated": true,
+            "fixed":     false
+            },
+         "efficiency" : {
+            "correlated": true,
+            "fixed": false
+            }
+    }
+```
+
+In particular, you can set `"correlated": true` if you want to use one variable to correlate the nuisance parameters (eg to speed up the computation times), and `"fixed": false` if you want to include a prior for nuisance parameters (otherwise these parameters they will be fixed to their partition value and not constrained).
+ 
+If a variable is correlated (either `energy_scale` or `efficency`), the code will search for a field in the `fit_groups` block of the partitions JSON file to use a correlated variable per each fit group. 
+In particular, the field has to be specified as:
+- `"efficiency_group_name": "..."`
+- `"energy_scale_group_name": "..."`
+
+ > [!NOTE] 
+ > If the key doesn't exist, this defaults to "all"
+ 
+Parameters are then added to the model called `αr_$name` (for resolution), `αe_$name` for efficiency and `αb_$name` for bias.
+ 
+ > [!WARNING]
+ > The $\alpha$ parameter names default to `_all`, if you want one different per experiment this must be explicitly specified in the fit groups entry
 
 
 ## Partition and events files
