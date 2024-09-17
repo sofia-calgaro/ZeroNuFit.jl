@@ -47,6 +47,15 @@ function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol)
 
 end
  
+function exp_stable(x::Float64)
+
+    
+    if (abs(x)<1E-6)
+        return 1 + x + x^2/2+x^3/6
+    else
+        return exp(x)
+    end
+end
 function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)
         """
         Normalised linear function defined by (1+slope*(x-center)/260)/norm.
@@ -58,13 +67,19 @@ function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)
         center = 1930
         range_l = [1930, 2109, 2124]
         range_h = [2099, 2114, 2190]
-
+        centers=[center,center,center]
         # could be made faster?
         R = p[Symbol(string(b_name)*"_slope")]
-
-        norm = sum(exp.(R*(center-range_l))/R)-sum(exp.(R*(center-range_h))/R)
-
-        return exp(-(x-center)*R)/norm
+        Rt=R/260
+        if (abs(Rt)>1E-6)
+           
+            norm = (-sum(exp_stable.(-Rt*(centers-range_l)))+sum(exp_stable.(-Rt*(centers-range_h))))/Rt
+        else
+            norm =240
+        end
+       
+        return exp_stable((x-center)*Rt)/norm
+    
 end
 
 
