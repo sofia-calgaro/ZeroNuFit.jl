@@ -9,14 +9,17 @@ using OrderedCollections
 
 
 function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name::Symbol)
-    
     if (bkg_shape==:uniform)
         return norm_uniform(evt_energy,p,b_name)
     elseif (bkg_shape==:linear)
         return norm_linear(evt_energy,p,b_name)
-    elseif (bkg_shape==:expo)
+    elseif (bkg_shape==:exponential)
         return norm_exponential(evt_energy,p,b_name)
+    else
+        @error "bkg shape",bkg_shape," is not yet implememnted"
+        exit(-1)
     end
+
 end
 function get_energy_scale_pars(part_k::NamedTuple,p::NamedTuple,settings::Dict,idx_part_with_events)
     """ 
@@ -121,8 +124,6 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value += logpdf(Poisson(λ), length(events_k))
 
-
-    
     for evt_energy in events_k
       
         term1 = model_b_k * get_bkg_pdf(bkg_shape,evt_energy,p, part_k.bkg_name )
