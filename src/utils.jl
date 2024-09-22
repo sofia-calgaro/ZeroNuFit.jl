@@ -98,7 +98,6 @@ function get_partitions_new(part_path::String)
                     exposure=Array(arrays["exposure"]),
                     bias =Array(arrays["bias"]),
                     bias_sigma =Array(arrays["bias_sigma"]))
-        println(fit_ranges)
         return tab,fit_groups,fit_ranges
 end
 

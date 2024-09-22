@@ -450,7 +450,6 @@ Parameters
         for (key,item) in distrB_multi
             priors[key]=item
         end
-        print_names(priors,pretty_names)
 
         return distprod(;priors...),pretty_names
     else
