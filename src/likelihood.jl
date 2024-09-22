@@ -133,7 +133,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
             # get the correct reso and bias (
             reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
-            term2 = model_s_k * pdf(Normal(Qbb + bias, reso), evt_energy) 
+            term2 = model_s_k * pdf(Normal(Qbb - bias, reso), evt_energy) 
         else
             term2 =0
         end
@@ -255,7 +255,7 @@ Returns
 
                 reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
 
-                append!(events,rand(Normal(Qbb + bias, reso)))
+                append!(events,rand(Normal(Qbb - bias, reso)))
                 
         
             end
