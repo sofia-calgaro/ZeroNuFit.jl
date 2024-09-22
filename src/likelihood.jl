@@ -8,13 +8,13 @@ using OrderedCollections
 
 
 
-function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name::Symbol)
+function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name::Symbol,fit_range)
     if (bkg_shape==:uniform)
-        return norm_uniform(evt_energy,p,b_name)
+        return norm_uniform(evt_energy,p,b_name,fit_range)
     elseif (bkg_shape==:linear)
-        return norm_linear(evt_energy,p,b_name)
+        return norm_linear(evt_energy,p,b_name,fit_range)
     elseif (bkg_shape==:exponential)
-        return norm_exponential(evt_energy,p,b_name)
+        return norm_exponential(evt_energy,p,b_name,fit_range)
     else
         @error "bkg shape",bkg_shape," is not yet implememnted"
         exit(-1)
@@ -44,7 +44,7 @@ return reso,bias
 
 end
 
-function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,settings::Dict)
+function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,settings::Dict,fit_range)
     """
     Get the expected number of signal and background counts in a partition
     """
@@ -53,6 +53,7 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,s
     deltaE = 240 # keV
     sig_units =1e-27 # signal is in units of this
 
+    deltaE = sum([arr[2]-arr[1] for arr in fit_range])
     eff= nothing
 
     # logic for efficiency it can be either correlated, uncorrelated or fixed
@@ -85,13 +86,13 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,s
 end
 
 
-function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple,settings::Dict)
+function build_likelihood_zero_obs_evts(part_k::NamedTuple, p::NamedTuple,settings::Dict,fit_range)
     """
     Function to calculate the partial likelihood for a partition with 0 events
     """
 
     ll_value = 0
-    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,settings)
+    model_s_k,model_b_k = get_mu_s_b(p,part_k,0,settings,fit_range)
     model_tot_k = model_b_k + model_s_k
 
     ll_value += -(model_tot_k+eps(model_tot_k)) 
@@ -101,7 +102,7 @@ end
 
 
 function build_likelihood_per_partition(idx_k::Int, idx_part_with_events::Int,part_k::NamedTuple, events_k::Vector{Float64}, 
-    p::NamedTuple,settings::Dict,bkg_shape::Symbol)
+    p::NamedTuple,settings::Dict,bkg_shape::Symbol,fit_range)
 """
 Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
@@ -111,7 +112,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     ll_value = 0
 
-    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,settings)
+    model_s_k,model_b_k =   get_mu_s_b(p,part_k,idx_part_with_events,settings,fit_range)
    
     model_tot_k = model_b_k + model_s_k
     
@@ -126,7 +127,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
     for evt_energy in events_k
       
-        term1 = model_b_k * get_bkg_pdf(bkg_shape,evt_energy,p, part_k.bkg_name )
+        term1 = model_b_k * get_bkg_pdf(bkg_shape,evt_energy,p, part_k.bkg_name ,fit_range)
 
         if (settings[:bkg_only]==false)
 
@@ -147,7 +148,7 @@ end
 
 
 function build_likelihood_looping_partitions(partitions::TypedTables.Table, events::Array{Vector{Float64}},
-    part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Union{Float64,Nothing};bkg_shape::Symbol=:uniform)
+    part_event_index::Vector{Int},settings::Dict,sqrt_prior::Bool,s_max::Union{Float64,Nothing},fit_ranges;bkg_shape::Symbol=:uniform)
 """
 Function which creates the likelihood function for the fit (looping over partitions)
 Parameters:
@@ -167,10 +168,10 @@ Returns:
                 
                 if part_event_index[idx_k]!=0
                     idx_k_with_events=part_event_index[idx_k]
-                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, settings,bkg_shape)
+                    total_ll += build_likelihood_per_partition(idx_k,part_event_index[idx_k], part_k, events[idx_k], p, settings,bkg_shape,fit_ranges[part_k.fit_group])
                 else
                     # no events are there for a given partition
-                    total_ll += build_likelihood_zero_obs_evts(part_k, p,settings)
+                    total_ll += build_likelihood_zero_obs_evts(part_k, p,settings,fit_ranges[part_k.fit_group])
                 end
             end
             
@@ -307,7 +308,7 @@ Parameters
     return distrS, distrB
 end
 
-function build_prior(partitions,part_event_index,config,settings::Dict;hierachical=false,bkg_shape=:uniform,shape_pars=nothing)
+function build_prior(partitions,part_event_index,config,settings::Dict;hierachical=false,hierachical_mode=nothing,hierachical_range=nothing,bkg_shape=:uniform,shape_pars=nothing)
 """
 Builds the priors for use in the fit
 ----------
@@ -325,9 +326,9 @@ Parameters
    
 
     distrS, distrB = get_signal_bkg_priors(config)
-    distrB_multi=Dict(Symbol(bkg_name)=>distrB for bkg_name in bkg_names)
+    distrB_multi=OrderedDict(Symbol(bkg_name)=>distrB for bkg_name in bkg_names)
 
-    pretty_names =Dict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
+    pretty_names =OrderedDict(:S=>string("S [")*L"10^{-27}"*string("yr")*L"^{-1}"*string("]"),
         :α=>L"\alpha_{\varepsilon}",
         :αr=>L"\alpha_{r}",
         :αb=>L"\alpha_{b}",
@@ -363,6 +364,7 @@ Parameters
             priors[Symbol(name)]=Truncated(Normal(0,1),α_min,Inf)
             pretty_names[Symbol(name)]=L"\alpha_{\varepsilon} ("*split(String(name),"_")[2]*")"
         end
+
       
     else
         eff=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index))
@@ -379,6 +381,7 @@ Parameters
             end
         end
         priors[:ε]=eff
+
     end
 
     ### ENERGY scale prior
@@ -396,6 +399,7 @@ Parameters
             pretty_names[Symbol(name)]=L"\alpha_{r} ("*split(String(name),"_")[2]*")"
 
         end
+
 
         list_names = partitions.energy_bias_name
         unique_list=unique(list_names)
@@ -449,18 +453,52 @@ Parameters
 
         return distprod(;priors...),pretty_names
     else
-        hd = BAT.HierarchicalDistribution(
-            v -> begin 
-            dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
-            return distprod(;dict...,priors...)
-            end,
-            distprod(B=0..1,σB=0..1)
-            
-            )
+
+        if (hierachical_mode=="lognormal")
+            hd = BAT.HierarchicalDistribution(
+                v -> begin 
+                dict = (; (key =>LogNormal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                return distprod(;dict...,priors...)
+                end,
+                distprod(B=0..1,σB=Uniform(hierachical_range[1],hierachical_range[2]))
+                
+                )
+        elseif (hierachical_mode=="normal")
+            hd = BAT.HierarchicalDistribution(
+                v -> begin 
+                dict = (; (key =>Normal(log(v.B)-0.5*v.σB*v.σB,v.σB) for key in keys(distrB_multi))...)
+                return distprod(;dict...,priors...)
+                end,
+                distprod(B=0..1,σB=Uniform(hierachical_range[1],hierachical_range[2]))
+                
+                )
+        else
+            @error "hierachical (correlated) bkg mode $hierachical_mode is not know"
+            exit(-1)
+        end
+
         pretty_names[:B]="B [cts/keV/kg/yr]"
         pretty_names[:σB]=L"\sigma_B"*string("[cts/keV/kg/yr]")
+
         return hd,pretty_names
     end
 end
 
+function print_names(priors,pretty_names)
+
+    for (key, value) in pairs(priors)
+        @info "added $key  to the model"
+        if (pretty_names[key] isa Vector)
+            for (idx,pn) in enumerate(pretty_names[key])
+                 @info "added $key[$idx] ($pn)  to the model"
+            end
+        else
+            pn = pretty_names[key]
+            @info "added $key ($pn) to the model"
+
+        end
+
+    end
+
+end
 

@@ -49,9 +49,10 @@ function get_partitions_new(part_path::String)
         arrays["energy_reso_name"]=[]
         arrays["energy_bias_name"]=[]
 
-
+        fit_ranges=OrderedDict()
         for fit_group in keys(part_data_json["partitions"])
             
+            fit_ranges[fit_group]=part_data_json["fit_groups"][fit_group]["range"]
             for part in part_data_json["partitions"][fit_group]
                 for key in k
                     append!(arrays[key],[part[key]])
@@ -97,8 +98,7 @@ function get_partitions_new(part_path::String)
                     exposure=Array(arrays["exposure"]),
                     bias =Array(arrays["bias"]),
                     bias_sigma =Array(arrays["bias_sigma"]))
-        
-        return tab,fit_groups
+        return tab,fit_groups,fit_ranges
 end
 
 function get_partition_event_index(events::Array{Vector{Float64}},partitions::TypedTables.Table)::Vector{Int}
@@ -248,7 +248,11 @@ function save_outputs(partitions, events, part_event_index, samples, posterior, 
 """
 Function to plot and save results, as well as inputs
 """
-    hier = config["bkg"]["correlated"]
+    if (haskey(config["bkg"],"correlated")) & (config["bkg"]["correlated"]["mode"]!="none")
+        hier=true
+    else
+        hier=false
+    end
     if (config["signal"]["prior"]=="sqrt")
         sqrt_prior=true
         s_max=config["signal"]["upper_bound"]

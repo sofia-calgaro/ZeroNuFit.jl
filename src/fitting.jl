@@ -8,7 +8,7 @@ include("likelihood.jl")
 
 
 
-function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol)
+function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
     """
     Normalised linear function defined by (1+slope*(x-center)/260)/norm.
     Parameters
@@ -17,8 +17,10 @@ function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol)
         - x::Real,     the x value to evaluate at
     """
         center = 1930
-        range_l = [1930, 2109, 2124]
-        range_h = [2099, 2114, 2190]
+        range_l = [arr[1] for arr in fit_range]
+        range_h = [arr[2] for arr in fit_range]
+
+       
         sum_range = sum(range_h .- range_l)
         sum_range_sq =sum(range_h .^ 2 .- range_l .^ 2)
         slope = p[Symbol(string(b_name)*"_slope")]
@@ -30,7 +32,7 @@ function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol)
 
 
 
-function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol)
+function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol,fit_range)
     """
     Normalised linear function defined by (1+slope*(x-center)/260)/norm.
     Parameters
@@ -38,8 +40,9 @@ function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol)
         - x::Real,     the x value to evaluate at
     """    
     center = 1930
-    range_l = [1930, 2109, 2124]
-    range_h = [2099, 2114, 2190]
+    range_l = [arr[1] for arr in fit_range]
+    range_h = [arr[2] for arr in fit_range]
+
 
     norm =sum(range_h .- range_l)
     return 1/norm
@@ -56,7 +59,7 @@ function exp_stable(x::Float64)
         return exp(x)
     end
 end
-function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)
+function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
         """
         Normalised linear function defined by (1+slope*(x-center)/260)/norm.
         Parameters
@@ -65,8 +68,9 @@ function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)
             - x::Real,     the x value to evaluate at
         """
         center = 1930
-        range_l = [1930, 2109, 2124]
-        range_h = [2099, 2114, 2190]
+        range_l = [arr[1] for arr in fit_range]
+        range_h = [arr[2] for arr in fit_range]
+
         centers=[center,center,center]
         # could be made faster?
         R = p[Symbol(string(b_name)*"_slope")]
@@ -102,18 +106,25 @@ end
 ##############################################
 ##############################################
 ##############################################
-function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index;config,bkg_only)
+function get_stat_blocks(partitions,events::Array{Vector{Float64}},part_event_index,fit_ranges;config,bkg_only)
 """
 Function to retrieve useful pieces (prior, likelihood, posterior), also in saving values
 """
     settings=get_settings(config)
 
-    # check if the key 'correlated' exists
-    if !haskey(config["bkg"], "correlated")
-        throw(ArgumentError("Key 'correlated' not found for the background parameter in the configuration JSON! Exit here"))
+    
+    if (haskey(config["bkg"],"correlated")) & (config["bkg"]["correlated"]["mode"]!="none")
+        corr= true
+        hier_mode =config["bkg"]["correlated"]["mode"]
+        hier_range =config["bkg"]["correlated"]["range"]
+    else
+        corr=false
+        hier_mode=nothing
+        hier_range=nothing
     end
     
-    corr= config["bkg"]["correlated"]
+
+       
     bkg_shape=:uniform
     bkg_shape_pars=nothing
 
@@ -125,7 +136,7 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     end
         
     
-    prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr,
+    prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr,hierachical_mode=hier_mode,hierachical_range=hier_range,
                             bkg_shape=bkg_shape,shape_pars=bkg_shape_pars)
     @info "using a ",bkg_shape," bkg with ",bkg_shape_pars," parameters"
     @info "built prior"
@@ -139,7 +150,7 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         end
     end
    
-    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,s_max,bkg_shape=bkg_shape)
+    likelihood = build_likelihood_looping_partitions(partitions, events, part_event_index,settings,sqrt_prior,s_max,fit_ranges,bkg_shape=bkg_shape)
     @info "built likelihood"
     
     posterior = PosteriorMeasure(likelihood, prior) 
@@ -148,12 +159,12 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
 end
 
 
-function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int}, config)
+function run_fit_over_partitions(partitions,events::Array{Vector{Float64}},part_event_index::Vector{Int}, config,fit_ranges)
 """
 Function to run the fit looping over partitions
 """
     bkg_only = config["bkg_only"]
-    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,config=config,bkg_only=bkg_only)
+    prior,likelihood,posterior,par_names = get_stat_blocks(partitions,events,part_event_index,fit_ranges,config=config,bkg_only=bkg_only)
 
     Ns = Int(config["bat_fit"]["nsteps"])
     Nc = Int(config["bat_fit"]["nchains"])
