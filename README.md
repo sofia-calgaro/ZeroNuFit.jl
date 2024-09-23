@@ -43,15 +43,10 @@ Before running the code, set the input config.json file with following entries:
         },
     "bkg_only": false,
     "signal": {"upper_bound":1000, "prior": "uniform"},
-    "bkg": {
-        "upper_bound":0.1, 
-        "prior": "uniform",
-        "correlated": {"mode": "none", "range": "none"},
-        "shape":{
-            "name":"exponential",
-            "pars":{"slope":[-10,10]}
-        }
-    },
+    "bkg": {"upper_bound":0.1,
+             "prior": "uniform"
+             },
+
     ...
 }
 ```
@@ -66,18 +61,8 @@ where
 - `"plot"`: settings for plotting; `"fit_and_data": true` plots fit line over data (and CI bands if `"bandfit_and_data": true`); `"scheme":"red"` and `"alpha":0.3` are used for customizing output appearances;
 - `"bkg_only": true` if we fit assuming no signal (S=0), false otherwise;
 - `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...);
-- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...). If you want to use a hierarchical model for correlated background indexes, substitute in `"mode": "none"` the function model you want to use (either `normal` or `lognormal`) and provide an input range. The shape of the background can be specified providing a `"shape"` block.
+- `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) there are several optional keys with details given below, if these are not provided the fit defaults to a flat background without correlations.
 
-As regards the background shape, if this is not provided, it defaults to a uniform background. 
-The `"name"` is used to tell the code which function to use, while the parameter is set by the pars dictonary.
-This will add parameters `${bkg_name}_slope` or similar to the model (and then call them). 
-Currently implemented are:
-
-- `"exponential"`: uses `norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol)` in fitting.jl;
-- `"linear"`: uses `norm_linear(x::Float64,p::NamedTuple,b_name::Symbol)` in fitting.jl;
-- `"uniform"`: uses `norm_uniform(x::Float64,p::NamedTuple,b_name::Symbol)` in fitting.jl.
-
-In each case the function defined should take in x (the energy), p the parameters and the bkg name b_name and return the normalised PDF of the background.
 
 Moreover, the config requires the following block for nuisance parameters, ie energy scale (=energy bias and resolution) and efficiency:
 ```
@@ -110,6 +95,32 @@ Parameters are then added to the model called `αr_$name` (for resolution), `αe
  > [!WARNING]
  > The $\alpha$ parameter names default to `_all`, if you want one different per experiment this must be explicitly specified in the fit groups entry
 
+## Background shape and correlation
+There are several options to control the background in more detail. These can be added to the "bkg" section of the config:
+In particular:
+ - "correlated" adds a hierachical (correlated) background to the model, this key should have a dictonary giving details on the prior shape and ranges for example:
+
+```
+"correlated":{"mode":"lognormal","range":[0,0.1]}
+```
+
+The three options for the mode are 'lognormal', 'normal' or 'none'.While the range gives the range of the uniform prior on the `\sigma_B` parameter.
+- "shape" changes the shape of the background from uniform. The user should provide a dictonary giving details on the shape:
+for example:
+
+```
+"shape":{
+            "name":"exponential",
+            "pars":{"slope":[-10,10]}
+        },
+```
+
+The "pars" subdictonary describes the range of the priors on the parameters of the model, currently implemented shapes are "uniform", "linear" and "exponential". These names correspond to functions in `fitting.jl` and logical conditions in `get_bkg_pdf` in `likelihood.jl`.
+
+This will add parameters `${bkg_name}_slope` or similar to the model (and then call them). This names therefore must correspond to the names in the functions in `fitting.jl`. To add a new shape simply define a new method in `fitting.jl` and a new logical condition in `get_bkg_pdf` in `likelihood.jl`.
+
+> [!NOTE] 
+> If these keys are not provided the model defaults to a uniform uncorrelated background.
 
 ## Partition and events files
 The takes inputs in JSON format, two files are needed a "partitions file" giving information on the independent spectra to be used in the fit/likelihood, this is set by the "partitions" key in the config file. This provides all the information neccesary to define the fit model.
