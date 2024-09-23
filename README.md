@@ -113,9 +113,12 @@ for example:
         },
 ```
 
-The "pars" subdictonary describes the range of the priors on the parameters of the model, currently implemented shapes are "uniform", "linear" and "exponential".
+The "pars" subdictonary describes the range of the priors on the parameters of the model, currently implemented shapes are "uniform", "linear" and "exponential". These names correspond to functions in `fitting.jl` and logical conditions in `get_bkg_pdf` in `likelihood.jl`.
+
 This will add parameters `${bkg_name}_slope` or similar to the model (and then call them). This names therefore must correspond to the names in the functions in `fitting.jl`. To add a new shape simply define a new method in `fitting.jl` and a new logical condition in `get_bkg_pdf` in `likelihood.jl`.
-> [!NOTE] If these keys are not provided the model defaults to a uniform uncorrelated background.
+
+> [!NOTE] 
+> If these keys are not provided the model defaults to a uniform uncorrelated background.
 
 ## Partition and events files
 The takes inputs in JSON format, two files are needed a "partitions file" giving information on the independent spectra to be used in the fit/likelihood, this is set by the "partitions" key in the config file. This provides all the information neccesary to define the fit model.
