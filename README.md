@@ -46,6 +46,7 @@ Before running the code, set the input config.json file with following entries:
     "bkg": {"upper_bound":0.1,
              "prior": "uniform"
              },
+
     ...
 }
 ```
@@ -61,6 +62,7 @@ where
 - `"bkg_only": true` if we fit assuming no signal (S=0), false otherwise;
 - `"signal"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, `sqrt`, ...);
 - `"bkg"`: select `"upper_bound"` for the prior and the `"prior"` shape (`uniform`, ...) there are several optional keys with details given below, if these are not provided the fit defaults to a flat background without correlations.
+
 
 Moreover, the config requires the following block for nuisance parameters, ie energy scale (=energy bias and resolution) and efficiency:
 ```
