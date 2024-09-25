@@ -83,7 +83,7 @@ Parameters:
     else
         @info "... we load already existing fit results"
         samples = bat_read(joinpath(config["output_path"],"mcmc_files/samples.h5")).result
-        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,config=config) 
+        prior,_,_,par_names = get_stat_blocks(partitions,events,part_event_index,fit_ranges,config=config,bkg_only=config["bkg_only"]) 
     end
 
     # let's save
