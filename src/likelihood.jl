@@ -50,12 +50,11 @@ function get_mu_s_b(p::NamedTuple,part_k::NamedTuple,idx_part_with_events::Int,s
     """
     N_A = 6.022E23
     m_76 = 75.92E-3 # kg/mol
-    deltaE = 240 # keV
     sig_units =1e-27 # signal is in units of this
-
+    
     deltaE = sum([arr[2]-arr[1] for arr in fit_range])
     eff= nothing
-
+    
     # logic for efficiency it can be either correlated, uncorrelated or fixed
     if settings[:bkg_only]==true 
         eff =0

@@ -89,7 +89,7 @@ Parameters:
     # let's save
     @info bat_report(samples)
     _,_,posterior,_ = get_stat_blocks(partitions,events,part_event_index,fit_ranges,config=config,bkg_only=config["bkg_only"]) 
-    save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path, priors=prior,par_names=par_names, toy_idx=toy_idx)
+    save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path, fit_ranges, priors=prior,par_names=par_names, toy_idx=toy_idx)
     
     return 
     

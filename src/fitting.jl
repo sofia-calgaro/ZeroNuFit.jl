@@ -7,6 +7,19 @@ using Cuba
 include("likelihood.jl")
 
 
+function get_bkg_info(config)
+    bkg_shape=:uniform
+    bkg_shape_pars=nothing
+
+    if (haskey(config["bkg"],"shape"))
+        bkg_shape = Symbol(config["bkg"]["shape"]["name"])
+        if (haskey(config["bkg"]["shape"],"pars"))
+            bkg_shape_pars=config["bkg"]["shape"]["pars"]
+        end
+    end
+    return bkg_shape,bkg_shape_pars
+end
+
 
 function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
     """
@@ -61,7 +74,7 @@ function exp_stable(x::Float64)
 end
 function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
         """
-        Normalised linear function defined by (1+slope*(x-center)/260)/norm.
+        Normalised linear function defined by (1+slope*(x-center)/fit_range)/norm.
         Parameters
         ----------
             - slope::Real, the slope of the background
@@ -122,19 +135,8 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
         hier_mode=nothing
         hier_range=nothing
     end
-    
 
-       
-    bkg_shape=:uniform
-    bkg_shape_pars=nothing
-
-    if (haskey(config["bkg"],"shape"))
-        bkg_shape = Symbol(config["bkg"]["shape"]["name"])
-        if (haskey(config["bkg"]["shape"],"pars"))
-            bkg_shape_pars=config["bkg"]["shape"]["pars"]
-        end
-    end
-        
+    bkg_shape,bkg_shape_pars = get_bkg_info(config)       
     
     prior,par_names=build_prior(partitions,part_event_index,config,settings,hierachical=corr,hierachical_mode=hier_mode,hierachical_range=hier_range,
                             bkg_shape=bkg_shape,shape_pars=bkg_shape_pars)

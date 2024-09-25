@@ -15,12 +15,6 @@ default(
     tickfontsize=10,      # Global tick label font size
     legendfontsize=8     # Global legend font size
 )
-# define some constants -TODO add to config
-Qbb = 2039.06 # keV
-N_A = 6.022E23
-m_76 = 75.92E-3 # kg/mol
-deltaE = 240 # keV
-sig_units =1e-27 # signal is in units of this
 
 tol_colors=ColorSchemes.tol_muted
 color_schemes=Dict(:blue =>[tol_colors[1],tol_colors[3],tol_colors[2]],
@@ -34,29 +28,42 @@ color_schemes=Dict(:blue =>[tol_colors[1],tol_colors[3],tol_colors[2]],
 ##############################################
 ##############################################
 ##############################################
-function constant(x)
-    if (x<2124 && x>2114)
-        0
-    elseif (x<2109 && x>2099)
-        0
-    else   
-        1/240 
+function fit_model(idx_part_with_events::Int,part_k::NamedTuple, p::NamedTuple,settings::Dict,bkg_shape::Symbol,fit_range,x)
+    Qbb = 2039.06 # keV
+    N_A = 6.022E23
+    m_76 = 75.92E-3 # kg/mol
+    sig_units =1e-27 # signal is in units of this
+    
+    deltaE = sum([arr[2]-arr[1] for arr in fit_range])
+    eff= nothing
+
+    # logic for efficiency it can be either correlated, uncorrelated or fixed
+    if settings[:bkg_only]==true 
+        eff =0
+
+    elseif (settings[:eff_correlated] == true)
+        eff_group = part_k.eff_name
+        eff = part_k.eff_tot + p[eff_group] * part_k.eff_tot_sigma
+
+    elseif (idx_part_with_events!=0 && 
+            settings[:eff_correlated]==false &&
+            settings[:eff_fixed]==false)
+
+        eff =p.ε[idx_part_with_events] 
+    else 
+        eff =part_k.eff_tot
     end
-end
 
-
-function fit_model(p, part_k, x, is_in_part, part_idx)
-    
-    b_name=part_k.bkg_name
-    model_s_k = log(2) * N_A * part_k.exposure * (part_k.eff_tot + p.α * part_k.eff_tot_sigma) * (p.S*sig_units) / m_76
+    b_name = part_k.bkg_name
     model_b_k = deltaE * part_k.exposure * p[b_name]
+    term1 = model_b_k * get_bkg_pdf(bkg_shape,x,p,b_name,fit_range)
 
-    term1 = model_b_k / deltaE
-    
-    if is_in_part
-        term2 = model_s_k * pdf(Normal(Qbb + p.𝛥[part_idx], p.σ[part_idx]), x)
+    if (settings[:bkg_only]==false)
+        reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
+        model_s_k = log(2) * N_A * part_k.exposure * (eff) * (p.S*sig_units) / m_76
+        term2 = model_s_k * pdf(Normal(Qbb - bias, reso), x) 
     else
-        term2 = model_s_k * pdf(Normal(Qbb + part_k.bias, part_k.fwhm/2.355), x)
+        term2 = 0
     end
     
     return term1 + term2 
@@ -67,7 +74,7 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_data(hist::Histogram,name,partitions,part_event_index,pars,samples,plotflag)
+function plot_data(hist::Histogram,name,partitions,part_event_index,pars,samples,plotflag,settings::Dict,bkg_shape::Symbol,fit_ranges)
 """
 Function to plot events in the Qbb analysis window and BAT fit results
 """
@@ -93,26 +100,27 @@ Function to plot events in the Qbb analysis window and BAT fit results
     )
     
     #plot fit model
-    function find_a_name(params,x)
+    function build_model_for_plotting(params,x)
         model = 0
         for (idx_k, part_k) in enumerate(partitions)
+            fit_range = fit_ranges[part_k.fit_group]
             if part_event_index[idx_k]!=0
                 idx_k_with_events=part_event_index[idx_k]
-                model += fit_model(params, part_k, x, true, part_event_index[idx_k])*diff(bin_edges)[1]
+                model += fit_model(idx_k_with_events, part_k, params, settings, bkg_shape, fit_range, x)*diff(bin_edges)[1]
             else
-                model += fit_model(params, part_k, x, false, nothing)*diff(bin_edges)[1]
+                model += fit_model(0, part_k, params, settings, bkg_shape, fit_range, x)*diff(bin_edges)[1]
             end
         end
         return model
     end
     
     if plotflag["bandfit_and_data"]
-        plot!(p,1930:0.1:2190, find_a_name, samples, alpha=0.4,median=false,globalmode=false,fillalpha=0.3) #TO DO: take only some samples
+        plot!(p,1930:0.1:2190, build_model_for_plotting, samples, alpha=0.4,median=false,globalmode=false,fillalpha=0.3) #TO DO: take only some samples
         best_fit_pars = BAT.mode(samples)
-        plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
+        plot!(p,1930:0.1:2190,x -> build_model_for_plotting(best_fit_pars,x),label="Fit",lw=2,color="red")
     else
         best_fit_pars = BAT.mode(samples)
-        plot!(p,1930:0.1:2190,x -> find_a_name(best_fit_pars,x),label="Fit",lw=2,color="red")
+        plot!(p,1930:0.1:2190,x -> build_model_for_plotting(best_fit_pars,x),label="Fit",lw=2,color="red")
     end
     
     # exclude the gamma lines
@@ -131,7 +139,11 @@ end
 ##############################################
 ##############################################
 ##############################################
-function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, plotflag; toy_idx=nothing)
+function plot_fit_and_data(partitions, events, part_event_index, samples, pars, output, config, fit_ranges; toy_idx=nothing)
+    
+    plotflag=config["plot"]
+    settings=get_settings(config)
+    bkg_shape,_ = get_bkg_info(config) 
     
     # create histo with energies 
     energies = []
@@ -143,7 +155,7 @@ function plot_fit_and_data(partitions, events, part_event_index, samples, pars, 
         end
     end
     hist_data = append!(Histogram(1930:1:2190), energies)
-    p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag)
+    p_fit = plot_data(hist_data,"",partitions,part_event_index,pars,samples,plotflag,settings,bkg_shape,fit_ranges)
     
     log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
     savefig(joinpath(output, "plots/fit_over_data$log_suffix.pdf"))

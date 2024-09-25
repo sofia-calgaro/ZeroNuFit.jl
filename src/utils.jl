@@ -244,7 +244,7 @@ Function which saves results from the fit and copies the input config (for any f
     end
 end
 
-function save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path;priors=nothing,par_names=nothing,toy_idx=nothing)
+function save_outputs(partitions, events, part_event_index, samples, posterior, config, output_path, fit_ranges;priors=nothing,par_names=nothing,toy_idx=nothing)
 """
 Function to plot and save results, as well as inputs
 """
@@ -291,7 +291,7 @@ Function to plot and save results, as well as inputs
     
     if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]
         @info "... now we plot fit & data"
-        plot_fit_and_data(partitions, events, part_event_index, samples, free_pars, output_path, config["plot"], toy_idx=toy_idx)
+        plot_fit_and_data(partitions, events, part_event_index, samples, free_pars, output_path, config, fit_ranges, toy_idx=toy_idx)
         @info "...done!"
     end
     
