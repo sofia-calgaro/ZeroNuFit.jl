@@ -1,14 +1,17 @@
 using Pkg
-Pkg.activate("docs")
+Pkg.activate(".")
 Pkg.instantiate()
 
 using Documenter
-using ZeroNuFit  # Replace with your package's name
+#using ZeroNuFit  # Replace with your package's name
+push!(LOAD_PATH, "../src")
+using ZeroNuFit 
 
 makedocs(
+    modules = [ZeroNuFit],
     sitename = "ZeroNuFit.jl",
     authors = "S. Calgaro, T. Dixon",
-    format = :html,
+    format = Documenter.HTML(),
     pages = [
         "Home" => "index.md",
     ]
