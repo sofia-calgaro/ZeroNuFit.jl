@@ -1,4 +1,3 @@
-using LegendDataManagement
 using PropertyFunctions
 using JSON
 using Logging
@@ -9,7 +8,6 @@ using DataStructures
 using PropDicts
 using Tables
 using TypedTables
-using LegendDataManagement
 using Optim
 using FileIO
 import JLD2
