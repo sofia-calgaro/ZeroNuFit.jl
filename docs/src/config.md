@@ -61,13 +61,15 @@ In particular, the field has to be specified as:
 - `"efficiency_group_name": "..."`
 - `"energy_scale_group_name": "..."`
 
- > [!NOTE] 
- > If the key doesn't exist, this defaults to "all"
+!!! note
+
+    If the key doesn't exist, this defaults to "all"
  
 Parameters are then added to the model called `αr_$name` (for resolution), `αe_$name` for efficiency and `αb_$name` for bias.
  
- > [!WARNING]
- > The $\alpha$ parameter names default to `_all`, if you want one different per experiment this must be explicitly specified in the fit groups entry
+!!! warning
+
+    The $\alpha$ parameter names default to `_all`, if you want one different per experiment this must be explicitly specified in the fit groups entry
 
 ## Background shape and correlation
 There are several options to control the background in more detail. These can be added to the "bkg" section of the config:
@@ -93,5 +95,6 @@ The "pars" subdictonary describes the range of the priors on the parameters of t
 
 This will add parameters `${bkg_name}_slope` or similar to the model (and then call them). This names therefore must correspond to the names in the functions in `fitting.jl`. To add a new shape simply define a new method in `fitting.jl` and a new logical condition in `get_bkg_pdf` in `likelihood.jl`.
 
-> [!NOTE] 
-> If these keys are not provided the model defaults to a uniform uncorrelated background.
+!!! note
+
+    If these keys are not provided the model defaults to a uniform uncorrelated background.

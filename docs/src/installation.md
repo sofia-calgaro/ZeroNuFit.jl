@@ -22,6 +22,8 @@ Now you can run the script inside this enviroment with:
 julia main.jl --project=. -c config/config.json
 ```
 
-> [!NOTE] 
-> The tool was developed for the LEGEND experiment. People from the LEGEND Collaborations can alternatively run the code within a LEGEND container with `julia` installed, see [this tutorial](https://github.com/legend-exp/legend-julia-tutorial) for more details.
+!!! note
+
+    The tool was developed for the LEGEND experiment. People from the LEGEND Collaborations can alternatively run the code within a LEGEND container with `julia`
+    installed, see [this tutorial](https://github.com/legend-exp/legend-julia-tutorial) for more details.
     

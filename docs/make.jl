@@ -14,5 +14,9 @@ makedocs(
     format = Documenter.HTML(),
     pages = [
         "Home" => "index.md",
+        "First steps" => "installation.md",
+        "Configuration file" => "config.md",
+        "Partitions and events" => "inputs.md",
+        "Generating toys" => "toys.md",
     ]
 )

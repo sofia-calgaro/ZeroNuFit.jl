@@ -3,8 +3,10 @@ The takes inputs in JSON format, two files are needed a "partitions file" giving
 
 The file consists of a file of independent spectra to include in the fit (for example channels or partitions). A partition is defined uniquely by a range of time-stamps, a detector name and an experiment name. 
 
-> [!NOTE]
-> In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. This allows to make fits where all detectors are fit together.
+!!! note
+
+    In principle the 'detector' does not need to be a single detector but can be a label for any groups of detectors. 
+    This allows to make fits where all detectors are fit together.
 
 The partitions are grouped into `fit_groups` these are sets of partitions which are treated with the same background fit model and range.
 In the partitions file the user must provide the information on the fit groups and partitions, (organised by fit group). This file must be provided as a JSON file, this allows a full customisation of the fit.
@@ -62,5 +64,6 @@ To convert to this format from the standard GERDA and LEGEND files, there are to
 
 It is possible to supply a list of partition and event files in this case the list of fit groups and events are concatenated.
 
-> [!WARNING]  
-> If multiple files are provided `fit_group` must still be unique.
+!!! warning
+
+    If multiple files are provided `fit_group` must still be unique.
