@@ -274,7 +274,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             nbins = 200, xlim=(mini,maximum(post)),colors=color_scheme,alpha=alpha,lw=0,linecolor=:black
             ) 
             xaxis!(xname)
-            yaxis!("Probability Density.")
+            yaxis!("Probability Density")
             ylims!(0,ylims()[2])
             
             x=range(mini, stop=maximum(post), length=1000)
@@ -324,7 +324,7 @@ Function to plot 1D and 2D marginalized distributions (and priors)
                 post = get_par_posterior(samples,par,idx=idx)
 
                 xlab = string("$(par)[$(idx)]")
-                ylab = string("Probability Density.")
+                ylab = string("Probability Density")
                 if (par_names !=nothing)
                     xname = par_names[par][idx]
                 end

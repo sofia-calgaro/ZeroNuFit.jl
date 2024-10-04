@@ -186,7 +186,7 @@ Function which saves sampling results
 end
 
 
-function save_results_into_json(samples,posterior,config,output;toy_idx=nothing)
+function save_results_into_json(samples,posterior,config,output;par_names=nothing,toy_idx=nothing)
 """
 Function which saves results from the fit and copies the input config (for any future need)
 """
@@ -198,6 +198,38 @@ Function which saves results from the fit and copies the input config (for any f
         OptimAlg(optalg = Optim.NelderMead(), init = ExplicitInit([global_modes]))
     )
     refined_global_modes = findmode_result.result
+    
+    first_sample = samples.v[1]
+    pars = keys(first_sample)
+    nuisance_dict = Dict{String, Vector{Dict{String, String}}}()
+    for par in pars
+        par_entry = first_sample[par]
+        
+        # we do not save entries for global parameters with length==1
+        if length(par_entry) != 1
+            # initialize an empty array for each main key (eff, bias, res)
+            nuisance_dict[string("$(par)")] = []  
+            
+            for idx in 1:length(par_entry) 
+                xname = string("$(par)")
+                if (par_names !=nothing)
+                    xname = par_names[par][idx]
+                end
+                pattern = r"\w+\s+part\d{4}\s\w+"
+                result = match(pattern, xname)
+                if result !== nothing
+                    tot_str = result.match
+                    parts = split(tot_str)
+                    inner_dict = Dict(
+                        "experiment" => parts[1], 
+                        "partition" => parts[2],
+                        "detector" => parts[3] 
+                    )
+                    push!(nuisance_dict[string("$(par)")], inner_dict)
+                end
+            end
+        end
+    end
     
     ltmp = NullLogger()
     marginalized_modes=0
@@ -226,7 +258,8 @@ Function which saves results from the fit and copies the input config (for any f
         "ci_95" => ci_95,
         "ci_99" => ci_99,
         "quantile90" => quantile90,
-        "config" => config
+        "config" => config, 
+        "nuisance_partitions" => nuisance_dict
     )
 
     json_string = JSON.json(data,4)
@@ -271,7 +304,7 @@ Function to plot and save results, as well as inputs
     end
     
     @info "... now we save other useful results + config entries"
-    save_results_into_json(samples, posterior, config, output_path,toy_idx=toy_idx)
+    save_results_into_json(samples, posterior, config, output_path,par_names=par_names,toy_idx=toy_idx)
     @info "...done!"
 
     if config["light_output"]==false
@@ -279,10 +312,10 @@ Function to plot and save results, as well as inputs
     end
 
     @info "... now we plot marginalized posteriors (and priors)"
-    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
+    #plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
 
     @info "plot 2D posterior for some cases"
-    plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names,toy_idx=toy_idx)
+    #plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names,toy_idx=toy_idx)
 
 
     @info "...done!"
