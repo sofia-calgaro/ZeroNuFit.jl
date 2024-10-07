@@ -32,15 +32,15 @@ function norm_linear(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
         center = 1930
         range_l = [arr[1] for arr in fit_range]
         range_h = [arr[2] for arr in fit_range]
-
        
         sum_range = sum(range_h .- range_l)
         sum_range_sq =sum(range_h .^ 2 .- range_l .^ 2)
         slope = p[Symbol(string(b_name)*"_slope")]
-  
-        norm = sum_range * (1 - slope * center / 260) + slope * sum_range_sq / (2 * 260)
+    
+        delta = range_h[end] - range_l[1]
+        norm = sum_range * (1 - slope * center / delta) + slope * sum_range_sq / (2 * delta)
      
-        return (1+slope*(x-center)/260)/norm
+        return (1+slope*(x-center)/delta)/norm
     end
 
 
@@ -55,7 +55,6 @@ function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol,fit_range)
     center = 1930
     range_l = [arr[1] for arr in fit_range]
     range_h = [arr[2] for arr in fit_range]
-
 
     norm =sum(range_h .- range_l)
     return 1/norm
@@ -87,12 +86,12 @@ function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
         centers=[center,center,center]
         # could be made faster?
         R = p[Symbol(string(b_name)*"_slope")]
-        Rt=R/260
+        delta = range_h[end] - range_l[1]
+        Rt=R/delta
         if (abs(Rt)>1E-6)
-           
             norm = (-sum(exp_stable.(-Rt*(centers-range_l)))+sum(exp_stable.(-Rt*(centers-range_h))))/Rt
         else
-            norm =240
+            norm =sum(range_h .- range_l)
         end
        
         return exp_stable((x-center)*Rt)/norm
