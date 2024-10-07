@@ -47,9 +47,22 @@ function main()
     # let's retrieve input for the fake generation of data (JUST ONCE!)
     samples, partitions, part_event_index = retrieve_real_fit_results(config_real_data)
     
+    # get fit ranges
+    fit_ranges=nothing
+    first=true
+    for part_path  in config_real_data["partitions"]
+        _,_,fit_range =get_partitions_new(part_path) 
+        if (first)
+            first=false
+            fit_ranges=fit_range
+        else
+            merge!(fit_ranges,fit_range)
+        end
+    end
+    
     # now let's generate and fit data! How many times? As N_toys
     settings=get_settings(config_real_data)
-    fake_data = generate_data(samples,partitions,part_event_index,settings,best_fit=config["best_fit"],seed=config["seed"])
+    fake_data = generate_data(samples,partitions,part_event_index,settings,fit_ranges,best_fit=config["best_fit"],seed=config["seed"])
 
     # define a new path for the events (where we will save everything)
     config_real_data["events"] = ["$output_path/sensitivity/fake_data/fake_data$toy_idx.json"]
