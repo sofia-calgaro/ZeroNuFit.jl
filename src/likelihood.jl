@@ -107,7 +107,6 @@ Function which computes the partial likelihood for a single data partiton
 free parameters: signal (S), background (B), energy bias (biask) and resolution per partition (resk)
 """
     Qbb = 2039.06 # keV
-    deltaE = 240 # keV
 
     ll_value = 0
 
@@ -188,7 +187,7 @@ end
 
 
 
-function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int},settings::Dict;
+function generate_data(samples::BAT.DensitySampleVector,partitions::TypedTables.Table,part_event_index::Vector{Int},settings::Dict,fit_ranges;
     best_fit::Bool=false,seed=nothing,bkg_only=false)
 """
 Generates data from a posterior distribution.
@@ -244,7 +243,7 @@ Returns
 
         b_name = part_k.bkg_name           
         idx_part_with_events=part_event_index[idx_k]
-        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,settings)
+        model_s_k,model_b_k = get_mu_s_b(p,part_k,idx_part_with_events,settings,fit_ranges[part_k.fit_group])
 
         n_s = rand(Poisson(model_s_k))
         n_b = rand(Poisson(model_b_k))
@@ -295,11 +294,11 @@ Parameters
         distrS = 0..uppS
     elseif config["signal"]["prior"]=="loguniform"
         distrS=LogUniform(0.01,uppS)
-    
     else
         @error "distibution", config["signal"]["prior"], " is not yet defined"
         exit(-1)
     end
+    
     if config["bkg"]["prior"] == "uniform"
         distrB = 0..uppB
     end
@@ -346,6 +345,7 @@ Parameters
     priors=OrderedDict()
     if (settings[:bkg_only]==false)
         priors[:S] =distrS
+        @info "entered to add S prior"
     end
 
     ### EFF prior
@@ -443,7 +443,7 @@ Parameters
         end
     
     end
-
+    
     ## BKG prior
     if (hierachical==false)
         for (key,item) in distrB_multi

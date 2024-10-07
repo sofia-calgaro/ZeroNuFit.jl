@@ -157,7 +157,7 @@ function get_events(event_path,partitions)::Array{Vector{Float64}}
         
 end
 
-## sampling
+## sampling - this has to be generalized to whatever fit range!
 function inverse_uniform_cdf(p)
     res = ifelse.(p .== 0, 1930,
           ifelse.(p .< (169/240), p .* 240 .+ 1930,
@@ -199,6 +199,7 @@ Function which saves results from the fit and copies the input config (for any f
     )
     refined_global_modes = findmode_result.result
     
+    # save partitions info for nuisance parameters
     first_sample = samples.v[1]
     pars = keys(first_sample)
     nuisance_dict = Dict{String, Vector{Dict{String, String}}}()
@@ -236,6 +237,21 @@ Function which saves results from the fit and copies the input config (for any f
     with_logger(ltmp) do
         marginalized_modes = BAT.bat_marginalmode(samples).result
        end
+    
+    """
+    unshaped_samples, f_flatten = bat_transform(Vector, samples)
+    @info "Unshaped samples:", bat_report(unshaped_samples)
+    
+    marginalized_modes = Dict()
+    parameter_samples = [s["v_1"] for s in unshaped_samples]  # Adjust for vectors if needed
+
+    hist = fit(Histogram, parameter_samples, nbins=50)
+    max_bin_idx = argmax(hist.weights)
+    mode_value = hist.edges[1][max_bin_idx]
+
+    marginalized_modes[string("v_1")] = mode_value
+    println("Marginalized modes: $marginalized_modes")
+    """
 
     mean = BAT.mean(samples)
     stddev = BAT.std(samples)
@@ -312,13 +328,13 @@ Function to plot and save results, as well as inputs
     end
 
     @info "... now we plot marginalized posteriors (and priors)"
-    #plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
+    plot_marginal_distr(partitions, samples, free_pars, output_path,priors=priors,par_names=par_names,plot_config=config["plot"],s_max=s_max,sqrt_prior=sqrt_prior,hier=hier,toy_idx=toy_idx)
 
-    @info "plot 2D posterior for some cases"
-    #plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names,toy_idx=toy_idx)
-
-
-    @info "...done!"
+    if config["light_output"]==false
+        @info "plot 2D posterior"
+        plot_two_dim_posteriors(samples,free_pars,output_path,par_names=par_names,toy_idx=toy_idx)
+        @info "...done!"
+    end
     
     if config["plot"]["bandfit_and_data"] || config["plot"]["fit_and_data"]
         @info "... now we plot fit & data"
