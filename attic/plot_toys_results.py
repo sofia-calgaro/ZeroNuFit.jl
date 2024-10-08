@@ -4,6 +4,7 @@ Main Authors: Sofia Calgaro, Toby Dixon
 """
 import sys
 import json
+import argparse
 import os
 import csv
 import base64
@@ -40,6 +41,7 @@ def main():
     parser.add_argument(
         "--fit_real",
         type=str,
+        default=None,
         help="Name of the fit output folder for the SIGNAL+BKG fit case",
     )
     parser.add_argument(
@@ -65,12 +67,17 @@ def main():
     json_files = os.listdir(json_folder)
     json_files = [os.path.join(json_folder, f) for f in json_files if ".json" in f]
     fake_data = [f.replace("mcmc_files", "fake_data").replace("fit_results_", "fake_data") for f in json_files]
+    partitions_list = json.load(open(json_files[0]))['config']['partitions'] #it's all the same
 
     # fit with signal
-    real_fit_json = json.load(open(os.path.join(output, real_fit, "mcmc_files/fit_results.json"))) 
-    partitions_list = real_fit_json['config']['partitions']
-    s90_real = real_fit_json['quantile90']['S']
-    sgm_real = real_fit_json['refined_global_modes']['S']
+    if real_fit is not None:
+        real_fit_json = json.load(open(os.path.join(output, real_fit, "mcmc_files/fit_results.json"))) 
+        s90_real = real_fit_json['quantile90']['S']
+        sgm_real = real_fit_json['refined_global_modes']['S']
+    else: 
+        s90_real = 0
+        sgm_real = 0
+        
     below_Sreal = []
     tot_S = []
 
@@ -112,7 +119,7 @@ def main():
             fwhm = 0
             # find the fwhm of this fake event
             for partition_file in partitions_list:
-                partition_file = json.load(open(os.path.join("ZeroNuFit.jl", partition_file)))
+                partition_file = json.load(open(os.path.join("../", partition_file)))
                 parts = partition_file["partitions"] # list of partitions
                 for p in parts: # list of events for a given partition 
                     p = partition_file["partitions"][p]
@@ -123,10 +130,6 @@ def main():
                         if timestamp >= start_ts-1 and timestamp<=end_ts+1 and detector == det:
                             fwhm = evt["fwhm"]
                             break        
-
-            if fwhm == 0:
-                print("no corresponding partition was found! Exit here")
-                sys.exit()
 
             roi_low = qbb - fwhm
             roi_upp = qbb + fwhm
@@ -147,7 +150,7 @@ def main():
         sgm = gms['S']
 
         tot_S.append(s90)
-        if s90<=s90_real:
+        if s90<=s90_real and real_fit is not None:
             below_Sreal.append(s90)
 
         if phI == True: print(en, phI, idx+1)
@@ -198,9 +201,9 @@ def main():
     print("Lower bound of the smallest 68% CI:", lower_bound)
     print("Upper bound of the smallest 68% CI:", upper_bound)
 
-
-    print("Number of toys below S_observed:", len(below_Sreal))
-    print("Percentage over the total number of toys:", len(below_Sreal) / len(tot_S), "%") 
+    if real_fit is not None:
+        print("Number of toys below S_observed:", len(below_Sreal))
+        print("Percentage over the total number of toys:", len(below_Sreal) / len(tot_S), "%") 
 
     min_s90 = np.min(s90_values)-1
     max_s90 = np.max(s90_values)+1
@@ -219,7 +222,7 @@ def main():
         ax.set_ylabel(f"Counts / {bin_width}")
         ax.set_xlabel(r"Signal upper limit 90% CI ($10^{-27}$ yr$^{-1}$)")
         ax.set_yscale("log")
-        ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
+        if real_fit is not None: ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
         ax.set_xlim(min_s90, max_s90)
         ax.legend(loc='upper right', frameon=False)
         pdf.savefig(bbox_inches='tight')
@@ -234,7 +237,7 @@ def main():
         ax.hist(s90_values_2evt, bins=nbins, histtype='step', color=c_dark_pistachio, lw=1, label=r"Toys w. 2 cts in $Q_{\beta\beta} \pm$FWHM")
         ax.hist(s90_values_other, bins=nbins, histtype='stepfilled', color='gray', alpha=0.3)
         ax.hist(s90_values_other, bins=nbins, histtype='step', color='gray', lw=1, label=r"Toys w. >2 cts in $Q_{\beta\beta} \pm$FWHM")
-        ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
+        if real_fit is not None: ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
         ax.set_ylabel(f"Counts / {bin_width}")
         ax.set_xlabel(r"Signal upper limit 90% CI ($10^{-27}$ yr$^{-1}$)")
         ax.set_yscale("log")
@@ -250,7 +253,7 @@ def main():
         ax.set_ylabel(f"Counts / {bin_width}")
         ax.set_xlabel(r"Signal upper limit 90% CI ($10^{-27}$ yr$^{-1}$)")
         ax.set_xlim(min_s90, max_s90)
-        ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
+        if real_fit is not None: ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
         ax.legend(loc='upper right', frameon=False)
         pdf.savefig(bbox_inches='tight')
         plt.close()
@@ -267,7 +270,7 @@ def main():
         ax.set_ylabel(f"Counts / {bin_width}")
         ax.set_xlabel(r"Signal upper limit 90% CI ($10^{-27}$ yr$^{-1}$)")
         ax.set_xlim(min_s90, max_s90)
-        ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
+        if real_fit is not None: ax.axvline(s90_real, linestyle='--', color='darkorange', label="Observed limit")
         ax.legend(loc='upper right', frameon=False)
         pdf.savefig(bbox_inches='tight')
         plt.close()
