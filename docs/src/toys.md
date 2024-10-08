@@ -52,3 +52,67 @@ $srun  $parallel "julia sensitivity.jl -c config_fake_data.json -i {1}" ::: {1..
 
 wait
 ```
+
+
+## Using already existing toys
+Another way to run the code is present if, for instance, an user wants to use toy data generated according to one model but fit them with another model.
+In this case, the path to the folder containing the already existing JSON files with toy data has to be provided together with the toy index:
+
+```
+julia sensitivity.jl -c config_fake_data.json -i N --path_to_toys path_to_your_toys
+```
+
+Below, an updated version of a bash file that can be used for retrieving multiple existing toy data and running sensitivity studies as multiple jobs on NERSC:
+
+```bash
+#!/bin/bash                                                                                                                                                 
+#SBATCH -q regular                                                                                                                                       
+#SBATCH --constraint=cpu                                                                                                                                    
+#SBATCH -t 48:00:00
+#SBATCH -J sens_test                                                                                                                                         
+
+#SBATCH --mail-user=<your_email>
+#SBATCH --mail-type=ALL                                                                                                                                     
+#SBATCH --output output_path/parallel.log                                                     
+#SBATCH --error output_path/parallel.err  
+
+#SBATCH  --image=legendexp/legend-base:latest               
+
+# set the directory path to toys
+path_to_toys="output/fit_9_l200_1BI_new_data_coax_bkg_noS/sensitivity/fake_data" #"path/to/your/toys"
+all_files=("$path_to_toys"/*.json)
+full_paths=()
+for file in "${all_files[@]}"; do
+    if [[ -f "$file" ]]; then 
+        full_paths+=("$file")
+    fi
+done
+if [ ${#full_paths[@]} -eq 0 ]; then
+    echo "The list of existing toy data is empty! Exit here."
+    exit 1
+else
+    echo "You are going to run a fit over ${#full_paths[@]} number of already existing toys stored under $path_to_toys"
+fi
+
+# array to hold toy_idx
+toy_indices=()
+
+# Loop over available fake JSON toys
+for path in "${full_paths[@]}"; do
+    base_name="${path%.json}"
+    number_str="${base_name##*fake_data}"  
+    toy_idx=$((number_str))  
+
+    toy_indices+=("$toy_idx") 
+done
+echo "List of toy indices: ${toy_indices[*]}"
+
+# parallel execution - convert array to a space-separated list
+module load parallel
+module load julia
+srun="srun -N 1"
+parallel="parallel --delay 1 -j 128"
+$srun $parallel "julia sensitivity.jl -c config/toy_9_l200_1BI_new_data_same_bkg_noS.json -i {1}" ::: "${toy_indices[@]}"
+
+wait
+```
