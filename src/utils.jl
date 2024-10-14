@@ -42,6 +42,7 @@ function get_partitions_new(part_path::String)
 
         end
         arrays["fit_group"]=[]
+        arrays["signal_par_name"]=[]
         arrays["bkg_par_name"]=[]
         arrays["eff_par_name"]=[]
         arrays["energy_reso_name"]=[]
@@ -57,7 +58,14 @@ function get_partitions_new(part_path::String)
                     end
                 append!(arrays["fit_group"],[fit_group])
                 append!(arrays["bkg_par_name"],[Symbol(part_data_json["fit_groups"][fit_group]["bkg_name"])])
-                
+            
+                ## defaults to 'gaussian'
+                if haskey(part_data_json["fit_groups"][fit_group], "signal_name")
+                    append!(arrays["signal_par_name"], [Symbol(part_data_json["fit_groups"][fit_group]["signal_name"])])
+                else
+                    append!(arrays["signal_par_name"], [Symbol("gaussian")])
+                end
+            
                 ## defaults to 'all'
                 if (haskey("efficiency_group_name",part_data_json["fit_groups"][fit_group]))
                     append!(arrays["eff_par_name"],["αe_"*Symbol(part_data_json["fit_groups"][fit_group]["efficiency_group_name"])])
@@ -65,6 +73,7 @@ function get_partitions_new(part_path::String)
                     append!(arrays["eff_par_name"],[:αe_all])
                 end
 
+                ## defaults to 'all'
                 if (haskey("energy_scale_group_name",part_data_json["fit_groups"][fit_group]))
                     append!(arrays["energy_reso_name"],[Symbol("αr_"*part_data_json["fit_groups"][fit_group]["energy_scale_group_name"])])
                     append!(arrays["energy_bias_name"],[Symbol("αb_"*part_data_json["fit_groups"][fit_group]["energy_scale_group_name"])])
@@ -78,10 +87,12 @@ function get_partitions_new(part_path::String)
             end
 
         end
+    
         #TODO: find a way to make this not hardcoded
         tab = Table(experiment=Array(arrays["experiment"]),
                     fit_group=Array(arrays["fit_group"]),
                     bkg_name = Array(arrays["bkg_par_name"]),
+                    signal_name = Array(arrays["signal_par_name"]),
                     energy_reso_name = Array(arrays["energy_reso_name"]),
                     energy_bias_name = Array(arrays["energy_bias_name"]),
                     eff_name = Array(arrays["eff_par_name"]),

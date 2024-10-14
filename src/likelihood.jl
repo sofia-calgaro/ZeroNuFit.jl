@@ -21,6 +21,21 @@ function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name:
     end
 
 end
+
+function get_signal_pdf(signal_shape,evt_energy::Float64,Qbb::Float64,bias::Float64,reso::Float64,fit_range)
+    if (signal_shape==:gaussian)
+        return pdf(Normal(Qbb - bias, reso), evt_energy) 
+    elseif (signal_shape==:gaussian_plus_lowEtail)
+        @error "signal shape",signal_shape," is in progress"
+        exit(-1)
+        #return norm_linear(evt_energy,p,b_name,fit_range)
+    else
+        @error "signal shape",signal_shape," is not yet implememnted"
+        exit(-1)
+    end
+
+end
+
 function get_energy_scale_pars(part_k::NamedTuple,p::NamedTuple,settings::Dict,idx_part_with_events)
     """ 
     Get the resolution and bias
@@ -131,7 +146,7 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
             # get the correct reso and bias (
             reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
-            term2 = model_s_k * pdf(Normal(Qbb - bias, reso), evt_energy) 
+            term2 = model_s_k * get_signal_pdf(part_k.signal_name,evt_energy,Qbb,bias,reso,fit_range) 
         else
             term2 =0
         end

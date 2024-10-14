@@ -63,8 +63,6 @@ function norm_uniform(x::Real,p::NamedTuple,b_name::Symbol,fit_range)
 end
  
 function exp_stable(x::Float64)
-
-    
     if (abs(x)<1E-6)
         return 1 + x + x^2/2+x^3/6
     else
@@ -97,20 +95,6 @@ function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
         return exp_stable((x-center)*Rt)/norm
     
 end
-
-
-function norm_gauss(sigma::Real,mu::Real,x::Real)
-"""
-Normalised gaussian function
-Parameters
-----------
-    - sigma::Real (the std of the Gaussian)
-    - mu::Real    (the mean)
-    - x::Real     (the x value to evaluate at)
-"""
-    pdf(Normal(mu,sigma), x)
-end
-
 
 
 
