@@ -247,7 +247,7 @@ Returns
 
         n_s = rand(Poisson(model_s_k))
         n_b = rand(Poisson(model_b_k))
-        events =generate_disjoint_uniform_samples(n_b)
+        events = generate_disjoint_uniform_samples(n_b, fit_ranges[part_k.fit_group])
         if (bkg_only == false)
             for i in 1:n_s
 

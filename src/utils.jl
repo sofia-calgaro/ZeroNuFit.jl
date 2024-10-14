@@ -157,23 +157,50 @@ function get_events(event_path,partitions)::Array{Vector{Float64}}
         
 end
 
-## sampling - this has to be generalized to whatever fit range!
-function inverse_uniform_cdf(p)
-    res = ifelse.(p .== 0, 1930,
-          ifelse.(p .< (169/240), p .* 240 .+ 1930,
-          ifelse.(p .< (169/240), 2099,
-          ifelse.(p .< (169 + 1/240), p .* 240 .+ 1940,
-          ifelse.(p .< (175/240), 2114,
-          ifelse.(p .< 1, p .* 240 .+ 1950, 2190))))))
+## sampling 
+function inverse_uniform_cdf(p, fit_range)
+    range_l = [arr[1] for arr in fit_range] 
+    range_h = [arr[2] for arr in fit_range] 
+    delta = sum(range_h .- range_l)
+    a = range_l[1]
+    b = range_h[end]
+    
+    cumulative_prob = 0.0
+    cumulative_range = 0.0
+
+    for j in 1:length(fit_range)
+        interval_width = range_h[j] - range_l[j]
+        interval_prob = interval_width / delta
+
+        # if p is within the current interval range
+        if cumulative_prob + interval_prob >= p
+            # scale the probability to the current interval
+            interval_p = (p - cumulative_prob) / interval_prob
+            res = range_l[j] + interval_p * interval_width
+            break
+        end
+
+        # accumulate the probability and range covered so far
+        cumulative_prob += interval_prob
+        cumulative_range += interval_width
+    end
+
+    # handle the p=1 case
+    if p == 1
+        res = range_h[end]
+    end
     
     return res
 end
-function generate_disjoint_uniform_samples(n)
+
+
+function generate_disjoint_uniform_samples(n, fit_range)
     rands=[]
     for i in 1:n
         append!(rands,rand())
     end
-    return inverse_uniform_cdf(rands)
+    res = [inverse_uniform_cdf(rand,fit_range) for rand in rands]
+    return res
 end
 
 
