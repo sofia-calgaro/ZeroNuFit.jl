@@ -56,14 +56,21 @@ def main():
         type=str,
         help="Global mode type: 'refined_global_modes' (default) or 'global_modes'",
     )
+    parser.add_argument(
+        "--sensitivity", "--s",
+        default="sensitivity",
+        type=str,
+        help="Name of the folder containing sensitivity study outputs: 'sensitivity' (default)",
+    )
     args = parser.parse_args()
     gm_type = args.global_mode
     output = args.path
     fit_name = args.fit_fake
     real_fit = args.fit_real
+    sensitivity_folder = args.sensitivity
     
     # fit without signal
-    json_folder = os.path.join(output, fit_name, "sensitivity/mcmc_files")
+    json_folder = os.path.join(output, fit_name, sensitivity_folder, "mcmc_files")
     json_files = os.listdir(json_folder)
     json_files = [os.path.join(json_folder, f) for f in json_files if ".json" in f]
     fake_data = [f.replace("mcmc_files", "fake_data").replace("fit_results_", "fake_data") for f in json_files]
@@ -197,9 +204,14 @@ def main():
     median = np.median(s90_values)
     lower_bound = np.percentile(s90_values, 16)
     upper_bound = np.percentile(s90_values, 84)
+    print("*** S ***")
     print("Median of toys:", median)
     print("Lower bound of the smallest 68% CI:", lower_bound)
     print("Upper bound of the smallest 68% CI:", upper_bound)
+    print("*** T ***")
+    print("Median of toys:", 1/median)
+    print("Lower bound of the smallest 68% CI:", 1/upper_bound)
+    print("Upper bound of the smallest 68% CI:", 1/lower_bound)
 
     if real_fit is not None:
         print("Number of toys below S_observed:", len(below_Sreal))

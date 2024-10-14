@@ -71,10 +71,6 @@ Parse the script arguments
             help = "path to config file"
             arg_type = String
             required = true
-        "--index_toy", "-i"
-            help = "index of sensitivity toy"
-            arg_type = Int
-            required = false
     end
     
     parse_args(settings)
