@@ -47,7 +47,7 @@ function main()
     
     # load the output path and create the neccesary
     output_path = config["path_to_fit"]
-    saving_folder = config["saving_folder"]
+    saving_folder = get(config, :saving_folder, "sensitivity") 
     
     config_real_data = read_config(joinpath(config["path_to_fit"], "mcmc_files/fit_results.json"))["config"]
     # we add/overwrite an option for light saving
@@ -65,6 +65,7 @@ function main()
     
     # we generate+fit a toy spectrum
     if path_to_toys == nothing
+        @info "You'll generate new toys!"
         # let's retrieve input for the fake generation of data (JUST ONCE!)
         samples, partitions, part_event_index = retrieve_real_fit_results(config_real_data)
 
@@ -94,6 +95,7 @@ function main()
         
     # we retrieve+fit a toy spectrum
     else
+        @info "You'll retrieve already existing toys!"
         if !ispath(path_to_toys)
             @info "Path to toy data does not exist! Exit here."
             exit()
