@@ -26,9 +26,7 @@ function get_signal_pdf(signal_shape,evt_energy::Float64,Qbb::Float64,bias::Floa
     if (signal_shape==:gaussian)
         return pdf(Normal(Qbb - bias, reso), evt_energy) 
     elseif (signal_shape==:gaussian_plus_lowEtail)
-        @error "signal shape",signal_shape," is in progress"
-        exit(-1)
-        #return norm_linear(evt_energy,p,b_name,fit_range)
+        return gaussian_plus_lowEtail(evt_energy,Qbb,bias,reso,fit_range)
     else
         @error "signal shape",signal_shape," is not yet implememnted"
         exit(-1)
