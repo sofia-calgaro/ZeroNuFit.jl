@@ -22,11 +22,12 @@ function get_bkg_pdf(bkg_shape::Symbol,evt_energy::Float64,p::NamedTuple,b_name:
 
 end
 
-function get_signal_pdf(signal_shape,evt_energy::Float64,Qbb::Float64,bias::Float64,reso::Float64,fit_range)
+function get_signal_pdf(signal_shape,evt_energy::Float64,Qbb::Float64,bias::Float64,reso::Float64,part_k::NamedTuple,fit_range)
+    #@info part_k.experiment, signal_shape
     if (signal_shape==:gaussian)
         return pdf(Normal(Qbb - bias, reso), evt_energy) 
     elseif (signal_shape==:gaussian_plus_lowEtail)
-        return gaussian_plus_lowEtail(evt_energy,Qbb,bias,reso,fit_range)
+        return gaussian_plus_lowEtail(evt_energy,Qbb,bias,reso,part_k,fit_range)
     else
         @error "signal shape",signal_shape," is not yet implememnted"
         exit(-1)
@@ -142,9 +143,9 @@ free parameters: signal (S), background (B), energy bias (biask) and resolution 
 
         if (settings[:bkg_only]==false)
 
-            # get the correct reso and bias (
+            # get the correct reso and bias 
             reso,bias = get_energy_scale_pars(part_k,p,settings,idx_part_with_events)
-            term2 = model_s_k * get_signal_pdf(part_k.signal_name,evt_energy,Qbb,bias,reso,fit_range) 
+            term2 = model_s_k * get_signal_pdf(part_k.signal_name,evt_energy,Qbb,bias,reso,part_k,fit_range) 
         else
             term2 =0
         end
@@ -334,8 +335,6 @@ Parameters
     unique_list=unique(list_names)
     bkg_names=[Symbol(name) for name in unique_list]
     
-   
-
     distrS, distrB = get_signal_bkg_priors(config)
     distrB_multi=OrderedDict(Symbol(bkg_name)=>distrB for bkg_name in bkg_names)
 
@@ -343,6 +342,7 @@ Parameters
         :α=>L"\alpha_{\varepsilon}",
         :αr=>L"\alpha_{r}",
         :αb=>L"\alpha_{b}",
+        :γ=>[],
         :ε=>[],
         :σ=>[],
         :𝛥=>[])
@@ -440,7 +440,48 @@ Parameters
         priors[:𝛥]=bias
 
     end
+    
+    ## additional signal priors 
+    # ...first, we look if there is any partition that requires the gamma parameter
+    part_event_index_gamma = []
+    ct = 1
+    for (idx,el) in enumerate(part_event_index)
+        if (partitions[idx].gamma != nothing && partitions[idx].signal_name == :gaussian_plus_lowEtail)
+            append!(part_event_index_gamma, ct)
+            ct += 1
+        else
+            append!(part_event_index_gamma, 0)
+        end
+    end
+    
+    @info "prima", part_event_index
+    @info "dopo", part_event_index_gamma
+    @info "max(prima)", maximum(part_event_index)
+    @info "max(dopo)", maximum(part_event_index_gamma)
+    @info "partitions[1]", partitions[1]
+    @info "partitions[8]", partitions[8]
+    #@info "partitions_gamma[1]", partitions_gamma[1]
+    #@info "partitions_gamma[8]", partitions_gamma[8]
+    #@info partitions_gamma
+    
+    # if there are >0 partitions that requires the gamma parameter, let's add it!
+    if maximum(part_event_index_gamma) != 0
+        gamma=Vector{Truncated{Normal{Float64},Continuous,Float64,Float64,Float64}}(undef,maximum(part_event_index_gamma))
+        for (idx,part) in enumerate(partitions)
+            # be careful to include a prior just for those experiments that need the parameter in the fit!
+            if (part_event_index[idx]!=0 && part.gamma != nothing && part.signal_name == :gaussian_plus_lowEtail)
+                i_new = part_event_index_gamma[idx]
 
+                gamma[i_new] =Truncated(Normal(part.gamma-1, part.gamma_sigma),-Inf,Inf)
+                long_name = string(part.experiment)*" "*string(part.part_name)*" "*part.detector
+                append!(pretty_names[:γ],["Peak-shape scale parameter "*L"(\gamma)"*" - "*long_name*""])
+            end
+        end
+        # add a prior only if there were partitions that included this parameter
+        @info "we are going to include a prior for gamma"
+        priors[:γ]=gamma
+    end
+    
     ## bkg shape priors
     if shape_pars!=nothing
         
@@ -457,6 +498,7 @@ Parameters
     
     end
     
+
     ## BKG prior
     if (hierachical==false)
         for (key,item) in distrB_multi

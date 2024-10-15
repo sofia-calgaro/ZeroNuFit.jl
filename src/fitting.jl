@@ -97,18 +97,18 @@ function norm_exponential(x::Float64,p::NamedTuple,b_name::Symbol,fit_range)
     
 end
 
-
-
-function gaussian_plus_lowEtail(evt_energy::Float64,Qbb::Float64,bias::Float64,reso::Float64,fit_range)
+function gaussian_plus_lowEtail(evt_energy::Float64,Qbb::Float64,bias::Float64,reso::Float64,part_k::NamedTuple,fit_range)
 """
-Model based on the peak shape used for the MJD analysis. The peak shape derives from considerations made in [S. I. Alvis et al., Phys. Rev. C 100, 025501 (2019)].
+Signal model based on the peak shape used for the MJD analysis. The peak shape derives from considerations made in [S. I. Alvis et al., Phys. Rev. C 100, 025501 (2019)].
 """
-    @error "gaussian_plus_lowEtail() is in progress... exit here..."
-    exit(-1)
+    f = part_k.frac
+    γ = part_k.gamma
+    τ = part_k.tau
     
-    term1 = 0 #(1 - f) * pdf(Normal(Qbb - bias, γ * reso), evt_energy)
+    term1 = (1-f) * pdf(Normal(Qbb - bias, γ*reso), evt_energy)
 
-    term2 = 0 #f / (2 * γ * τ) * exp(((γ * reso)^2) / (2 * (γ * τ)^2) + (E - Q_ββ - μ) / (γ * τ)) * erfc((γ * reso) / (sqrt(2) * γ * τ) + (E - Q_ββ - μ) / (sqrt(2) * γ * reso))
+    term2 = f / (2*γ*τ) * exp( ((γ*reso)^2) / (2*(γ*τ)^2) + (evt_energy-(Qbb-bias)) / (γ*τ) )
+    term2 = term2 * erfc( (γ*reso) / (sqrt(2)*γ*τ) + (evt_energy-(Qbb-bias)) / (sqrt(2)*γ*reso) )
     
     return term1 + term2
 end
@@ -156,6 +156,7 @@ Function to retrieve useful pieces (prior, likelihood, posterior), also in savin
     
     posterior = PosteriorMeasure(likelihood, prior) 
     @info "got posterior"
+    
     return prior,likelihood,posterior,par_names
 end
 

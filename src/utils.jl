@@ -47,6 +47,10 @@ function get_partitions_new(part_path::String)
         arrays["eff_par_name"]=[]
         arrays["energy_reso_name"]=[]
         arrays["energy_bias_name"]=[]
+        arrays["frac"]=[]
+        arrays["tau"]=[]
+        arrays["gamma"]=[]
+        arrays["gamma_sigma"]=[]
 
         fit_ranges=OrderedDict()
         for fit_group in keys(part_data_json["partitions"])
@@ -54,8 +58,18 @@ function get_partitions_new(part_path::String)
             fit_ranges[fit_group]=part_data_json["fit_groups"][fit_group]["range"]
             for part in part_data_json["partitions"][fit_group]
                 for key in k
-                    append!(arrays[key],[part[key]])
+                    if key in ["frac", "tau", "gamma", "gamma_sigma"]
+                        continue # separate treatment
                     end
+                    append!(arrays[key],[part[key]])
+                end
+                for key in ["frac", "tau", "gamma", "gamma_sigma"]
+                    if key in k
+                        append!(arrays[key],[part[key]])
+                    else
+                        append!(arrays[key],[nothing])
+                    end
+                end
                 append!(arrays["fit_group"],[fit_group])
                 append!(arrays["bkg_par_name"],[Symbol(part_data_json["fit_groups"][fit_group]["bkg_name"])])
             
@@ -106,7 +120,11 @@ function get_partitions_new(part_path::String)
                     fwhm_sigma=Array(arrays["fwhm_sigma"]),
                     exposure=Array(arrays["exposure"]),
                     bias =Array(arrays["bias"]),
-                    bias_sigma =Array(arrays["bias_sigma"]))
+                    bias_sigma =Array(arrays["bias_sigma"]),
+                    frac =Array(arrays["frac"]),
+                    tau =Array(arrays["tau"]),
+                    gamma =Array(arrays["gamma"]),
+                    gamma_sigma =Array(arrays["gamma_sigma"]))
         return tab,fit_groups,fit_ranges
 end
 
@@ -137,7 +155,7 @@ end
 
 function get_events(event_path,partitions)::Array{Vector{Float64}}
     """
-        Get the event info from a jason file and save  to a Table
+        Get the event info from a JSON file and save to a Table
     """
         @info event_path
         event_json = JSON.parsefile(event_path,dicttype=DataStructures.OrderedDict)
@@ -241,15 +259,19 @@ Function which saves results from the fit and copies the input config (for any f
     first_sample = samples.v[1]
     pars = keys(first_sample)
     nuisance_dict = Dict{String, Vector{Dict{String, String}}}()
+    @info "pars", pars
     for par in pars
         par_entry = first_sample[par]
+        @info "par_entry", par_entry
         
         # we do not save entries for global parameters with length==1
-        if length(par_entry) != 1
+        if (length(par_entry) != 1 || !(par_entry isa AbstractFloat))
+            @info "par_names[par]", par_names[par]
+            
             # initialize an empty array for each main key (eff, bias, res)
             nuisance_dict[string("$(par)")] = []  
             
-            for idx in 1:length(par_entry) 
+            for idx in 1:length(par_names[par]) 
                 xname = string("$(par)")
                 if (par_names !=nothing)
                     xname = par_names[par][idx]

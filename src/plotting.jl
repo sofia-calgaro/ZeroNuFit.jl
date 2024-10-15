@@ -187,7 +187,7 @@ function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=n
     for par_x in pars
         par_entry = first_sample[par_x]
         
-        if length(par_entry) != 1
+        if (length(par_entry) != 1 || !(par_entry isa AbstractFloat))
             continue
         end
         for par_y in pars
@@ -195,13 +195,13 @@ function plot_two_dim_posteriors(samples,pars,output;par_names=nothing,toy_idx=n
                 continue
             end
             par_entry = first_sample[par_y]
-            if length(par_entry) != 1
+            if (length(par_entry) != 1 || !(par_entry isa AbstractFloat))
                 continue
             end
             
             x = get_par_posterior(samples,par_x,idx=nothing)
             y = get_par_posterior(samples,par_y,idx=nothing)
-
+            
             p=histogram2d(x, y, bins=200, cmap=:batlow, xlabel=par_names[par_x], ylabel=par_names[par_y],
             right_margin = 10Plots.mm)
             log_suffix = toy_idx == nothing ? "" : "_$(toy_idx)"
@@ -253,7 +253,8 @@ Function to plot 1D and 2D marginalized distributions (and priors)
     for par in pars
         par_entry = first_sample[par]
         
-        if length(par_entry) == 1
+        # checking if it is a 'AbstractFloat' helps avoiding cases were multivariate parameters have 1 entry only
+        if (length(par_entry) == 1 && par_entry isa AbstractFloat)
 
             post = get_par_posterior(samples,par,idx=nothing)
             if (par==:S || par==:B)
@@ -265,8 +266,6 @@ Function to plot 1D and 2D marginalized distributions (and priors)
             if (par_names !=nothing)
                 xname = par_names[par]
             end
-
-            
 
             p=plot(
             samples, par,
