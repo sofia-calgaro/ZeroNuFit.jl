@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Generating toys · ZeroNuFit.jl</title><meta name="title" content="Generating toys · ZeroNuFit.jl"/><meta property="og:title" content="Generating toys · ZeroNuFit.jl"/><meta property="twitter:title" content="Generating toys · ZeroNuFit.jl"/><meta name="description" content="Documentation for ZeroNuFit.jl."/><meta property="og:description" content="Documentation for ZeroNuFit.jl."/><meta property="twitter:description" content="Documentation for ZeroNuFit.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">ZeroNuFit.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../likelihood/">Likelihood implementation</a></li><li><a class="tocitem" href="../installation/">First steps</a></li><li><a class="tocitem" href="../config/">Configuration file</a></li><li><a class="tocitem" href="../inputs/">Partitions and events</a></li><li class="is-active"><a class="tocitem" href>Generating toys</a><ul class="internal"><li><a class="tocitem" href="#Posterior-predictive-distribution-studies"><span>Posterior predictive distribution studies</span></a></li><li><a class="tocitem" href="#Running-toys"><span>Running toys</span></a></li><li><a class="tocitem" href="#Testing-alternative-models-using-already-existing-toys"><span>Testing alternative models using already existing toys</span></a></li><li><a class="tocitem" href="#Testing-fake-scanerios"><span>Testing fake scanerios</span></a></li></ul></li><li><a class="tocitem" href="../tutorial/">Tutorial</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Generating toys</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Generating toys</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/legend-exp/ZeroNuFit.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/legend-exp/ZeroNuFit.jl/blob/main/docs/src/toys.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Generating-toys"><a class="docs-heading-anchor" href="#Generating-toys">Generating toys</a><a id="Generating-toys-1"></a><a class="docs-heading-anchor-permalink" href="#Generating-toys" title="Permalink"></a></h1><p>Table of contents:</p><ul><li><a href="#Generating-toys">Generating toys</a></li><li class="no-marker"><ul><li><a href="#Posterior-predictive-distribution-studies">Posterior predictive distribution studies</a></li><li><a href="#Running-toys">Running toys</a></li><li><a href="#Testing-alternative-models-using-already-existing-toys">Testing alternative models using already existing toys</a></li><li><a href="#Testing-fake-scanerios">Testing fake scanerios</a></li></ul></li></ul><h2 id="Posterior-predictive-distribution-studies"><a class="docs-heading-anchor" href="#Posterior-predictive-distribution-studies">Posterior predictive distribution studies</a><a id="Posterior-predictive-distribution-studies-1"></a><a class="docs-heading-anchor-permalink" href="#Posterior-predictive-distribution-studies" title="Permalink"></a></h2><p>In order to check for any mis-modeling in the fits and to further understand the derived half-life limits, we performed &quot;sensitivity&quot; studies.  In a Bayesian context, the sensitivity is related to the concept of posterior predictive distributions. The prior predictive distribution is the expected distribution of data coming from a future experiment identical to that performed and repeated under the same conditions. This marginalizes the uncertainty in the model parameters, based on their prior distributions.  Alternatively, the posterior predictive distribution weights the data by the posterior obtained from the analysis. If the original data were modeled appropriately, then fake data generated under the given model should distribute similarly to the original data (see <em>A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, &quot;Bayesian Data Analysis&quot;, 3rd ed. 798, Chapman &amp; Hall, 2013</em> for further details).</p><p>Considering the observed signal counts as an observable of the data, we can thus extract &quot;sensitivity curves&quot; that can be interpreted as the distribution of expected future limits derived from repeating the identical experiment. This is distinct from a frequentist sensitivity since uncertainty on nuisance parameters are marginalized over.</p><p>Sensitivity studies can be run over <span>$N_{\rm tot}$</span> toy spectra generated by sampling the posterior marginalized distributions of nuisance parameters obtained in the no-signal hypothesis fit, i.e. in a fit where the signal contribution was excluded from the modeling of events.  In particular, starting from the posterior distributions derived for all nuisance parameters via the fit over original data, <span>$p(\theta | D)$</span>, data were sampled from a model&#39;s posterior distribution as follows:</p><p class="math-container">\[\begin{aligned}
+    p(y | D) = \int p(y | \theta) p(\theta | D) d\theta
+\end{aligned}\]</p><p>where <span>$y$</span> are the generated data, <span>$D$</span> are the observed data, and <span>$\theta$</span> are the model parameters (but the signal).  This is achieved by drawing samples of <span>$\theta$</span> from the posterior distribution <span>$p(\theta | D)$</span>, and subsequently generating datasets <span>$y$</span> based on the likelihood model <span>$p(y | \theta)$</span>.  In particular, for each partition, the expected number of background events was calculated using Poisson sampling, <span>$n_{\rm b} \sim \text{Pois}(\mu_b)$</span>, so that <span>$n_{\rm b}$</span> events could be uniformly generated in the considered fit energy window to build a toy energy spectrum. Each generated toy energy spectrum can be later fitted with a signal+background model.</p><h2 id="Running-toys"><a class="docs-heading-anchor" href="#Running-toys">Running toys</a><a id="Running-toys-1"></a><a class="docs-heading-anchor-permalink" href="#Running-toys" title="Permalink"></a></h2><p>A module <code>sensitivity.jl</code> is present for generating toys and running sensitivity studies. The script can be run as</p><pre><code class="nohighlight hljs">$ julia sensitivity.jl -c config_fake_data.json -i N</code></pre><p>where <span>$N=\{1,\,...,\,N_{\rm tot}\}$</span> is an integer number corresponding to the toy index. The input config file (<code>config_fake_data.json</code>) has the following entries:</p><pre><code class="nohighlight hljs">{
+    &quot;path_to_fit&quot;: &quot;output/fit_gerda_phIandphII_NoSignal/&quot;,
+    &quot;best_fit&quot;: false,
+    &quot;low_stat&quot;: true,
+    &quot;seed&quot;: null
+}
+</code></pre><p>where</p><ul><li><code>&quot;path_to_fit&quot;</code> is the path to the already performed fit over real data;</li><li><code>&quot;best_fit&quot;: true</code> if we want to fix the paramaters to the best fit coming from the fit under the no-signal hypothesis;</li><li><code>&quot;low_stat&quot;: true</code> to run 5 MCMC chains with <span>$10^5$</span> steps each; if <code>false</code>, then the statistics used for the original fit under the no-signal hypothesis is used;</li><li><code>&quot;seed&quot;: null</code> if we want a random seed when generating fake data, otherwise you can fix it to an Int value.</li></ul><p>Below, we show an example of a bash script used for running sensitivity studies as multiple jobs on NERSC:</p><pre><code class="language-bash hljs">#!/bin/bash                                                                                                                                                 
+#SBATCH -q regular                                                                                                                                       
+#SBATCH --constraint=cpu                                                                                                                                    
+#SBATCH -t 48:00:00
+#SBATCH -J sens_test                                                                                                                                         
+#SBATCH --output parallel.log                                                     
+#SBATCH --error parallel.err  
+
+module load parallel
+module load julia
+srun=&quot;srun -N 1&quot;
+parallel=&quot;parallel --delay 1 -j 128&quot;
+
+# run parallel jobs
+$srun  $parallel &quot;julia sensitivity.jl -c config_fake_data.json -i {1}&quot; ::: {1..10000} &amp;
+
+wait</code></pre><h2 id="Testing-alternative-models-using-already-existing-toys"><a class="docs-heading-anchor" href="#Testing-alternative-models-using-already-existing-toys">Testing alternative models using already existing toys</a><a id="Testing-alternative-models-using-already-existing-toys-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-alternative-models-using-already-existing-toys" title="Permalink"></a></h2><p>Another way to run the code is present if, for instance, an user wants to use toy data generated according to one model and fit them with a different model. In this case, the path to the folder containing the already existing JSON files with toy energy events previously generated has to be provided together with the toy index:</p><pre><code class="nohighlight hljs">julia sensitivity.jl -c config_fake_data.json -i N --path_to_toys path_to_your_toys</code></pre><p>Below, an example of a bash script that can be used for retrieving multiple existing toy data and running sensitivity studies as multiple jobs on NERSC:</p><pre><code class="language-bash hljs">#!/bin/bash                                                                                                                                                 
+#SBATCH -q regular                                                                                                                                       
+#SBATCH --constraint=cpu                                                                                                                                    
+#SBATCH -t 48:00:00
+#SBATCH -J sens_test                                                                                                                                         
+#SBATCH --output parallel.log                                                     
+#SBATCH --error parallel.err             
+
+# set the directory path to toys
+path_to_toys=&quot;path_to_your_toys&quot;
+all_files=(&quot;$path_to_toys&quot;/*.json)
+full_paths=()
+for file in &quot;${all_files[@]}&quot;; do
+    if [[ -f &quot;$file&quot; ]]; then 
+        full_paths+=(&quot;$file&quot;)
+    fi
+done
+if [ ${#full_paths[@]} -eq 0 ]; then
+    echo &quot;The list of existing toy data is empty! Exit here.&quot;
+    exit 1
+else
+    echo &quot;You are going to run a fit over ${#full_paths[@]} number of already existing toys stored under $path_to_toys&quot;
+fi
+
+# array to hold toy_idx
+toy_indices=()
+
+# loop over available fake JSON toys
+for path in &quot;${full_paths[@]}&quot;; do
+    base_name=&quot;${path%.json}&quot;
+    number_str=&quot;${base_name##*fake_data}&quot;  
+    toy_idx=$((number_str))  
+
+    toy_indices+=(&quot;$toy_idx&quot;) 
+done
+echo &quot;List of toy indices: ${toy_indices[*]}&quot;
+
+module load parallel
+module load julia
+srun=&quot;srun -N 1&quot;
+parallel=&quot;parallel --delay 1 -j 128&quot;
+$srun $parallel &quot;julia sensitivity.jl -c config/toy_9_l200_1BI_new_data_same_bkg_noS.json -i {1}&quot; ::: &quot;${toy_indices[@]}&quot;
+
+wait</code></pre><h2 id="Testing-fake-scanerios"><a class="docs-heading-anchor" href="#Testing-fake-scanerios">Testing fake scanerios</a><a id="Testing-fake-scanerios-1"></a><a class="docs-heading-anchor-permalink" href="#Testing-fake-scanerios" title="Permalink"></a></h2><p>In the above examples, you can replace the julia-running line in order to test the &quot;sensitivity&quot; of the experiment for fixed input partitions parameters and a fixed level of background (<code>&lt;bkg_index&gt;</code>: expressed in units of <span>$10^{-4}$</span> counts/keV/kg/yr) for the exclusion scenario:</p><pre><code class="language-bash hljs">$srun  $parallel &quot;julia sensitivity.jl -c config/fake_config.json -i {1} -f true -b &lt;bkg_idex&gt;&quot; ::: {1..10000} </code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>You can find an example of <code>fake_config.json</code> under <code>config/</code>. Notice that the option <code>&quot;bkg_only&quot;</code> has to be set to <code>true</code> for the code to run. In this way, the code is able to generate a fake toy spectrum assuming no signal, and then it will automatically include a signal contribution in the model when it comes to fit the generated toy events.</p></div></div><p>An example of fake_partitions.json` input is the following, where you fill entries with the values you want to test the <span>$0\nu\beta\beta$</span> sensitivity:</p><pre><code class="language-json hljs">{
+    &quot;fit_groups&quot;: {
+        &quot;all_l200a&quot;: {
+            &quot;range&quot;: [
+                [1930.0, 2098.511], [2108.511, 2113.513], [2123.513, 2190.0}
+            ],
+            &quot;model&quot;: &quot;uniform&quot;,
+            &quot;bkg_name&quot;: &quot;B_l200a_all&quot;
+        }
+    },
+    &quot;partitions&quot;: {
+        &quot;all_l200a&quot;: [
+            {
+            &quot;experiment&quot;: &quot;L200&quot;,
+            &quot;detector&quot;: &quot;FAKEDET&quot;, // random name
+            &quot;part_name&quot;: &quot;part0001&quot;, // partition ID
+            &quot;start_ts&quot;: 1704950367, // used to map the enregy events to the correct partition ID
+            &quot;end_ts&quot;: 1708271505, // used to map the enregy events to the correct partition ID
+            &quot;eff_tot&quot;: 0.69,
+            &quot;eff_tot_sigma&quot;: 0, 
+            &quot;width&quot;: 1.0616522503600239, // energy resolution in standard deviation (in keV)
+            &quot;width_sigma&quot;: 0,
+            &quot;fwhm&quot;: 2.5, // energy resolution in FWHM (in keV)
+            &quot;fwhm_sigma&quot;: 0,
+            &quot;exposure&quot;: 1000,
+            &quot;bias&quot;: 0, 
+            &quot;bias_sigma&quot;: 0
+            }
+        ]
+    }
+}</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>The code is working for 1 fake partition only. If in <code>fake_partitions.json</code> you add more than one fake partition, all partitions but the first one will be ignored when generatind your toy spectra.</p></div></div><p>The code works for deriving the exclusion sensitivity, so for the <code>fake_events.json</code> input just use:</p><pre><code class="language-json hljs">{
+    &quot;events&quot;: [
+    ]
+}</code></pre><p>The implementation of a discovery sensitivity study has not been carried on.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inputs/">« Partitions and events</a><a class="docs-footer-nextpage" href="../tutorial/">Tutorial »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Thursday 7 May 2026 12:57">Thursday 7 May 2026</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
