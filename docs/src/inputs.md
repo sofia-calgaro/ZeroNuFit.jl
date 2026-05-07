@@ -109,4 +109,8 @@ It is possible to supply a list of partition and event files in this case the li
 !!! warning
 
     If multiple files are provided `fit_group` must still be unique.
+
+!!! note
+
+    Two example scripts of how to build the events and partitions files are present under `attic`, see `make_input_events.jl` and `make_input_partitions.jl`, respectively. By adjusting the functions to your needs, you will be able to easily populate the content of JSON files you need to load in the config file before running your fit. 
     
